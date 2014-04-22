@@ -1,0 +1,1898 @@
+`line 1 "or1200_ic_top.v" 1
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 44 "or1200_ic_top.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+`line 49 "or1200_ic_top.v" 0
+`line 1 "timescale.v" 1
+`timescale 1ps/1ps
+`line 3 "timescale.v" 0
+
+`line 3 "timescale.v" 2
+`line 49 "or1200_ic_top.v" 0
+
+`line 50 "or1200_ic_top.v" 0
+ 
+ 
+`line 51 "or1200_ic_top.v" 0
+`line 1 "or1200_defines.v" 1
+
+`line 2 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 27 "or1200_defines.v" 0
+ 
+
+`line 29 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+
+`line 35 "or1200_defines.v" 0
+ 
+
+`line 37 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 45 "or1200_defines.v" 0
+ 
+
+`line 47 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 77 "or1200_defines.v" 0
+ 
+
+`line 79 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 89 "or1200_defines.v" 0
+ 
+
+`line 91 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 111 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 120 "or1200_defines.v" 0
+ 
+
+`line 122 "or1200_defines.v" 0
+ 
+ 
+
+`line 125 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 145 "or1200_defines.v" 0
+ 
+
+`line 147 "or1200_defines.v" 0
+ 
+
+`line 149 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 172 "or1200_defines.v" 0
+ 
+
+`line 174 "or1200_defines.v" 0
+ 
+	
+ 
+ 
+ 
+ 
+
+`line 181 "or1200_defines.v" 0
+ 
+
+`line 183 "or1200_defines.v" 0
+ 
+	
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 193 "or1200_defines.v" 0
+ 
+
+`line 195 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+
+`line 200 "or1200_defines.v" 0
+ 
+
+`line 202 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 244 "or1200_defines.v" 0
+ 
+
+`line 246 "or1200_defines.v" 0
+ 
+
+`line 248 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+
+`line 254 "or1200_defines.v" 0
+ 
+ 
+ 
+
+`line 258 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+
+`line 263 "or1200_defines.v" 0
+ 
+
+`line 265 "or1200_defines.v" 0
+ 
+
+`line 267 "or1200_defines.v" 0
+ 
+
+`line 269 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+
+`line 274 "or1200_defines.v" 0
+ 
+
+`line 276 "or1200_defines.v" 0
+ 
+ 
+
+`line 279 "or1200_defines.v" 0
+ 
+
+`line 281 "or1200_defines.v" 0
+ 
+ 
+
+`line 284 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 304 "or1200_defines.v" 0
+ 
+
+`line 306 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 331 "or1200_defines.v" 0
+ 
+
+`line 333 "or1200_defines.v" 0
+ 
+
+`line 335 "or1200_defines.v" 0
+ 
+
+`line 337 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 348 "or1200_defines.v" 0
+ 
+
+`line 350 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 371 "or1200_defines.v" 0
+ 
+
+`line 373 "or1200_defines.v" 0
+ 
+ 
+
+`line 376 "or1200_defines.v" 0
+ 
+
+`line 378 "or1200_defines.v" 0
+ 
+ 
+
+`line 381 "or1200_defines.v" 0
+ 
+ 
+ 
+
+`line 385 "or1200_defines.v" 0
+ 
+
+`line 387 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 403 "or1200_defines.v" 0
+ 
+
+`line 405 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 434 "or1200_defines.v" 0
+ 
+
+`line 436 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+
+`line 441 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 448 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 461 "or1200_defines.v" 0
+ 
+
+`line 463 "or1200_defines.v" 0
+ 
+
+`line 465 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 483 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+
+`line 489 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 498 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 579 "or1200_defines.v" 0
+ 
+
+`line 581 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 608 "or1200_defines.v" 0
+ 
+
+`line 610 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 637 "or1200_defines.v" 0
+ 
+
+`line 639 "or1200_defines.v" 0
+ 
+ 
+ 
+
+`line 643 "or1200_defines.v" 0
+ 
+
+`line 645 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 657 "or1200_defines.v" 0
+ 
+
+`line 659 "or1200_defines.v" 0
+ 
+
+`line 661 "or1200_defines.v" 0
+ 
+
+`line 663 "or1200_defines.v" 0
+ 
+ 
+
+`line 666 "or1200_defines.v" 0
+ 
+
+`line 668 "or1200_defines.v" 0
+	
+	
+	
+ 
+ 
+
+`line 674 "or1200_defines.v" 0
+ 
+
+`line 676 "or1200_defines.v" 0
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+ 
+ 
+
+`line 690 "or1200_defines.v" 0
+ 
+
+`line 692 "or1200_defines.v" 0
+	
+	
+ 
+ 
+	
+ 
+ 
+	
+	
+	
+ 
+
+`line 704 "or1200_defines.v" 0
+ 
+
+`line 706 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 713 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+
+`line 718 "or1200_defines.v" 0
+ 
+
+`line 720 "or1200_defines.v" 0
+ 
+
+`line 722 "or1200_defines.v" 0
+ 
+
+`line 724 "or1200_defines.v" 0
+ 
+ 
+
+`line 727 "or1200_defines.v" 0
+ 
+
+`line 729 "or1200_defines.v" 0
+	
+	
+	
+ 
+ 
+
+`line 735 "or1200_defines.v" 0
+ 
+
+`line 737 "or1200_defines.v" 0
+	
+	
+	
+	
+	
+	
+	
+	
+	
+ 
+ 
+
+`line 749 "or1200_defines.v" 0
+ 
+
+`line 751 "or1200_defines.v" 0
+	
+	
+ 
+ 
+	
+ 
+ 
+	
+	
+	
+ 
+
+`line 763 "or1200_defines.v" 0
+ 
+ 
+
+`line 766 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 773 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+
+`line 778 "or1200_defines.v" 0
+ 
+
+`line 780 "or1200_defines.v" 0
+ 
+ 
+ 
+  
+
+`line 785 "or1200_defines.v" 0
+  
+
+`line 787 "or1200_defines.v" 0
+ 
+
+`line 789 "or1200_defines.v" 0
+ 
+
+`line 791 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 799 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+	
+	
+
+`line 807 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+	
+	
+
+`line 815 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+	
+	
+
+`line 823 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+	
+	
+
+`line 831 "or1200_defines.v" 0
+ 
+ 
+ 
+
+`line 835 "or1200_defines.v" 0
+ 
+
+`line 837 "or1200_defines.v" 0
+ 
+ 
+ 
+  
+
+`line 842 "or1200_defines.v" 0
+  
+
+`line 844 "or1200_defines.v" 0
+ 
+ 
+ 
+
+`line 848 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 865 "or1200_defines.v" 0
+ 
+
+`line 867 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+	
+	
+
+`line 875 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+	
+	
+
+`line 883 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+	
+	
+
+`line 891 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+	
+	
+
+`line 899 "or1200_defines.v" 0
+ 
+ 
+ 
+
+`line 903 "or1200_defines.v" 0
+ 
+
+`line 905 "or1200_defines.v" 0
+ 
+
+`line 907 "or1200_defines.v" 0
+ 
+
+`line 909 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 926 "or1200_defines.v" 0
+ 
+ 
+ 
+
+`line 930 "or1200_defines.v" 0
+ 
+ 
+
+`line 933 "or1200_defines.v" 0
+ 
+
+`line 935 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+
+`line 941 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+
+`line 947 "or1200_defines.v" 0
+ 
+
+`line 949 "or1200_defines.v" 0
+ 
+
+`line 951 "or1200_defines.v" 0
+ 
+
+`line 953 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 961 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+
+`line 966 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+
+`line 972 "or1200_defines.v" 0
+ 
+ 
+
+`line 975 "or1200_defines.v" 0
+ 
+
+`line 977 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 987 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+
+`line 993 "or1200_defines.v" 0
+ 
+
+`line 995 "or1200_defines.v" 0
+ 
+
+`line 997 "or1200_defines.v" 0
+ 
+ 
+
+`line 1000 "or1200_defines.v" 0
+ 
+
+`line 1002 "or1200_defines.v" 0
+ 
+
+`line 1004 "or1200_defines.v" 0
+ 
+ 
+ 
+
+`line 1008 "or1200_defines.v" 0
+ 
+
+
+`line 1011 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+
+`line 1017 "or1200_defines.v" 0
+ 
+ 
+ 
+
+`line 1021 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 1071 "or1200_defines.v" 0
+ 
+
+`line 1073 "or1200_defines.v" 0
+ 
+ 
+
+`line 1076 "or1200_defines.v" 0
+ 
+
+`line 1078 "or1200_defines.v" 0
+ 
+ 
+
+`line 1081 "or1200_defines.v" 0
+ 
+
+`line 1083 "or1200_defines.v" 0
+ 
+ 
+
+`line 1086 "or1200_defines.v" 0
+ 
+
+`line 1088 "or1200_defines.v" 0
+ 
+ 
+
+`line 1091 "or1200_defines.v" 0
+ 
+
+`line 1093 "or1200_defines.v" 0
+ 
+ 
+
+`line 1096 "or1200_defines.v" 0
+ 
+
+`line 1098 "or1200_defines.v" 0
+ 
+ 
+ 
+
+`line 1102 "or1200_defines.v" 0
+ 
+
+`line 1104 "or1200_defines.v" 0
+ 
+ 
+
+`line 1107 "or1200_defines.v" 0
+ 
+
+`line 1109 "or1200_defines.v" 0
+ 
+ 
+
+`line 1112 "or1200_defines.v" 0
+ 
+
+`line 1114 "or1200_defines.v" 0
+ 
+ 
+
+`line 1117 "or1200_defines.v" 0
+ 
+
+`line 1119 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+     
+
+`line 1137 "or1200_defines.v" 0
+     
+
+`line 1139 "or1200_defines.v" 0
+ 
+ 
+ 
+  
+
+`line 1144 "or1200_defines.v" 0
+  
+
+`line 1146 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 1172 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 1181 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 1203 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 1212 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 1240 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+  
+
+`line 1246 "or1200_defines.v" 0
+  
+
+`line 1248 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+  
+
+`line 1256 "or1200_defines.v" 0
+  
+
+`line 1258 "or1200_defines.v" 0
+ 
+
+`line 1260 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 1288 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 1300 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 1312 "or1200_defines.v" 0
+ 
+
+
+`line 1315 "or1200_defines.v" 0
+ 
+ 
+
+`line 1318 "or1200_defines.v" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+  
+`line 1339 "or1200_defines.v" 2
+`line 51 "or1200_ic_top.v" 0
+
+`line 52 "or1200_ic_top.v" 0
+ 
+
+`line 54 "or1200_ic_top.v" 0
+ 
+
+`line 56 "or1200_ic_top.v" 0
+module or1200_ic_top(
+	 
+	clk, rst,
+ 
+	 
+	icbiu_dat_o, icbiu_adr_o, icbiu_cyc_o, icbiu_stb_o, icbiu_we_o, 
+	icbiu_sel_o, icbiu_cab_o, icbiu_dat_i, icbiu_ack_i, icbiu_err_i,
+ 
+	 
+	ic_en,
+	icqmem_adr_i, icqmem_cycstb_i, icqmem_ci_i, icqmem_sel_i, icqmem_tag_i,
+	icqmem_dat_o, icqmem_ack_o, icqmem_rty_o, icqmem_err_o, icqmem_tag_o,
+ 
+ 
+	
+	  
+
+`line 73 "or1200_ic_top.v" 0
+ 
+	 
+	spr_cs, spr_write, spr_dat_i
+);
+ 
+parameter dw = OR1200_OPERAND_WIDTH;
+ 
+
+`line 81 "or1200_ic_top.v" 0
+ 
+
+`line 83 "or1200_ic_top.v" 0
+ 
+
+`line 85 "or1200_ic_top.v" 0
+ 
+
+`line 87 "or1200_ic_top.v" 0
+input				clk;
+input				rst;
+ 
+
+`line 91 "or1200_ic_top.v" 0
+ 
+
+`line 93 "or1200_ic_top.v" 0
+output	[dw-1:0]		icbiu_dat_o;
+output	[31:0]			icbiu_adr_o;
+output				icbiu_cyc_o;
+output				icbiu_stb_o;
+output				icbiu_we_o;
+output	[3:0]			icbiu_sel_o;
+output				icbiu_cab_o;
+input	[dw-1:0]		icbiu_dat_i;
+input				icbiu_ack_i;
+input				icbiu_err_i;
+ 
+
+`line 105 "or1200_ic_top.v" 0
+ 
+
+`line 107 "or1200_ic_top.v" 0
+input				ic_en;
+input	[31:0]			icqmem_adr_i;
+input				icqmem_cycstb_i;
+input				icqmem_ci_i;
+input	[3:0]			icqmem_sel_i;
+input	[3:0]			icqmem_tag_i;
+output	[dw-1:0]		icqmem_dat_o;
+output				icqmem_ack_o;
+output				icqmem_rty_o;
+output				icqmem_err_o;
+output	[3:0]			icqmem_tag_o;
+ 
+ 
+
+
+
+`line 123 "or1200_ic_top.v" 0
+ 
+    
+ 
+
+`line 127 "or1200_ic_top.v" 0
+ 
+
+`line 129 "or1200_ic_top.v" 0
+ 
+
+`line 131 "or1200_ic_top.v" 0
+input				spr_cs;
+input				spr_write;
+input	[31:0]			spr_dat_i;
+ 
+
+`line 136 "or1200_ic_top.v" 0
+ 
+
+`line 138 "or1200_ic_top.v" 0
+wire				tag_v;
+wire	[`OR1200_ICTAG_W-2:0]	tag;
+wire	[dw-1:0]		to_icram;
+wire	[dw-1:0]		from_icram;
+wire	[31:0]			saved_addr;
+wire	[3:0]			icram_we;
+wire				ictag_we;
+wire	[31:0]			ic_addr;
+wire				icfsm_biu_read;
+/*verilator lint_off UNOPTFLAT*/     
+reg				tagcomp_miss;
+/*verilator lint_on UNOPTFLAT*/     
+wire	[`OR1200_ICINDXH:4]	ictag_addr;
+wire				ictag_en;
+wire				ictag_v; 
+wire				ic_inv;
+wire				icfsm_first_hit_ack;
+wire				icfsm_first_miss_ack;
+wire				icfsm_first_miss_err;
+wire				icfsm_burst;
+wire				icfsm_tag_we;
+reg 				ic_inv_q;
+ 
+ 
+
+
+
+`line 165 "or1200_ic_top.v" 0
+				
+				
+				  
+				  
+				  
+
+`line 171 "or1200_ic_top.v" 0
+ 
+
+`line 173 "or1200_ic_top.v" 0
+ 
+
+`line 175 "or1200_ic_top.v" 0
+assign icbiu_adr_o = ic_addr;
+assign ic_inv = spr_cs & spr_write;
+assign ictag_we = icfsm_tag_we | ic_inv;
+assign ictag_addr = ic_inv ? 
+		    spr_dat_i[`OR1200_ICINDXH:4] : 
+		    ic_addr[`OR1200_ICINDXH:4];
+assign ictag_en = ic_inv | ic_en;
+assign ictag_v = ~ic_inv;
+ 
+
+`line 185 "or1200_ic_top.v" 0
+ 
+ 
+
+`line 188 "or1200_ic_top.v" 0
+assign icbiu_dat_o = 32'h00000000;
+ 
+
+`line 191 "or1200_ic_top.v" 0
+ 
+
+`line 193 "or1200_ic_top.v" 0
+assign icbiu_cyc_o = (ic_en) ? icfsm_biu_read : icqmem_cycstb_i;
+assign icbiu_stb_o = (ic_en) ? icfsm_biu_read : icqmem_cycstb_i;
+assign icbiu_we_o = 1'b0;
+assign icbiu_sel_o = (ic_en & icfsm_biu_read) ? 4'b1111 : icqmem_sel_i;
+assign icbiu_cab_o = (ic_en) ? icfsm_burst : 1'b0;
+assign icqmem_rty_o = ~icqmem_ack_o & ~icqmem_err_o;
+assign icqmem_tag_o = icqmem_err_o ? 4'hb : icqmem_tag_i;
+ 
+
+`line 202 "or1200_ic_top.v" 0
+ 
+
+`line 204 "or1200_ic_top.v" 0
+assign icqmem_ack_o = ic_en ? (icfsm_first_hit_ack | icfsm_first_miss_ack) : icbiu_ack_i;
+assign icqmem_err_o = ic_en ? icfsm_first_miss_err : icbiu_err_i;
+ 
+
+`line 208 "or1200_ic_top.v" 0
+ 
+
+`line 210 "or1200_ic_top.v" 0
+assign ic_addr = (icfsm_biu_read) ? saved_addr : icqmem_adr_i;
+ 
+
+`line 213 "or1200_ic_top.v" 0
+ 
+
+`line 215 "or1200_ic_top.v" 0
+assign to_icram = icbiu_dat_i;
+ 
+
+`line 218 "or1200_ic_top.v" 0
+ 
+
+`line 220 "or1200_ic_top.v" 0
+assign icqmem_dat_o = icfsm_first_miss_ack | !ic_en ? icbiu_dat_i : from_icram;
+ 
+
+`line 223 "or1200_ic_top.v" 0
+ 
+
+`line 225 "or1200_ic_top.v" 0
+always @(posedge clk or `OR1200_RST_EVENT rst)
+   if (rst==`OR1200_RST_VALUE)
+     ic_inv_q <= 1'b0;
+   else
+     ic_inv_q <= ic_inv;
+ 
+ 
+
+`line 233 "or1200_ic_top.v" 0
+ 
+
+`line 235 "or1200_ic_top.v" 0
+ 
+always @(tag or saved_addr or tag_v) begin
+	  if ((tag != saved_addr[31:`OR1200_ICTAGL]) | !tag_v)
+	    tagcomp_miss = 1'b1;
+	  else
+	    tagcomp_miss = 1'b0;
+end
+ 
+
+`line 244 "or1200_ic_top.v" 0
+ 
+
+`line 246 "or1200_ic_top.v" 0
+or1200_ic_fsm or1200_ic_fsm(
+	.clk(clk),
+	.rst(rst),
+	.ic_en(ic_en),
+	.icqmem_cycstb_i(icqmem_cycstb_i),
+	.icqmem_ci_i(icqmem_ci_i),
+	.tagcomp_miss(tagcomp_miss),
+	.biudata_valid(icbiu_ack_i),
+	.biudata_error(icbiu_err_i),
+	.start_addr(icqmem_adr_i),
+	.saved_addr(saved_addr),
+	.icram_we(icram_we),
+	.biu_read(icfsm_biu_read),
+	.first_hit_ack(icfsm_first_hit_ack),
+	.first_miss_ack(icfsm_first_miss_ack),
+	.first_miss_err(icfsm_first_miss_err),
+	.burst(icfsm_burst),
+	.tag_we(icfsm_tag_we)
+);
+ 
+
+`line 267 "or1200_ic_top.v" 0
+ 
+
+`line 269 "or1200_ic_top.v" 0
+or1200_ic_ram or1200_ic_ram(
+	.clk(clk),
+	.rst(rst),
+ 
+	
+	
+	
+	
+
+`line 278 "or1200_ic_top.v" 0
+	.addr(ic_addr[`OR1200_ICINDXH:2]),
+	.en(ic_en),
+	.we(icram_we),
+	.datain(to_icram),
+	.dataout(from_icram)
+);
+ 
+
+`line 286 "or1200_ic_top.v" 0
+ 
+
+`line 288 "or1200_ic_top.v" 0
+or1200_ic_tag or1200_ic_tag(
+	.clk(clk),
+	.rst(rst),
+ 
+	
+	
+	
+	
+
+`line 297 "or1200_ic_top.v" 0
+	.addr(ictag_addr),
+	.en(ictag_en),
+	.we(ictag_we),
+	.datain({ic_addr[31:`OR1200_ICTAGL], ictag_v}),
+	.tag_v(tag_v),
+	.tag(tag)
+);
+ 
+endmodule
+
+`line 307 "or1200_ic_top.v" 2
