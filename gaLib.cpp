@@ -10,7 +10,7 @@ gaIndiv_t::gaIndiv_t (int index_, int vec_length_) :
 	input_vec.clear();
 	state_list = vector<state_t*> (vec_length, NULL);
 	fitness = 0;
-	branchCov = vector<int>();
+	branchCov = vector<int>(CONST_NUM_BRANCH, 0);
 }
 
 gaIndiv_t::~gaIndiv_t() {
@@ -22,21 +22,24 @@ gaIndiv_t::~gaIndiv_t() {
 		}
 	}
 	state_list.clear();
+	branchCov.clear();
 }
 
 bool gaIndiv_t :: operator<(gaIndiv_t* indiv) const {
+	// TODO
 
 	return false;
 }
 
 bool gaIndiv_t :: operator==(gaIndiv_t* indiv) const {
+	// TODO
 
 	return false;
 }
 
 void gaIndiv_t :: simCkt(Vtop* top) {
 	
-	cout << "simCkt: " << input_vec.length() << endl;
+//	cout << "simCkt: " << input_vec.length() << endl;
 	assert(input_vec.length() == (uint)(vec_length * CONST_NUM_INPUT_BITS));
 	int cycle = 0;
 	sim_reset_clock(top);
@@ -44,6 +47,10 @@ void gaIndiv_t :: simCkt(Vtop* top) {
 	for (cycle = 0; cycle < vec_length; ++cycle )
 		simCkt(top, cycle);
 
+//	cout << "B-Cov" << endl;
+//	for(int ind = 0; ind < CONST_NUM_BRANCH; ++ind)
+//		cout << branchCov[ind] << " ";
+//	cout << endl;
 	return;
 }
 
@@ -59,6 +66,11 @@ void gaIndiv_t :: simCkt(Vtop* top, int cycle) {
 	state_t *tmp_state = new state_t(top, cycle);
 	state_list[cycle] = tmp_state;
 
+	for(vector<int>::iterator it = tmp_state->branch_index.begin();
+			it != tmp_state->branch_index.end(); ++it)
+		branchCov[*it]++;
+
+	ResetCounters(top);
 }
 	
 void gaIndiv_t :: initRandom(int start_) {
@@ -83,6 +95,31 @@ void gaIndiv_t :: seedIndiv(gaIndiv_t* indiv, int start_, int len_) {
 	input_vec = input_vec.substr(0,start_) 
 				+ (indiv->input_vec).substr(start_, len_);
 	
+}
+
+void gaIndiv_t :: printIndiv(bool state_) {
+	
+	cout << "I: " << index << endl;
+	//cout << endl << "# Vectors: " << inputVec.size()/CONST_NUM_INPUT_BITS << endl;
+	for (uint i = 0; i < input_vec.length(); i++) {
+		cout << input_vec[i];
+		if ((i+1) % CONST_NUM_INPUT_BITS == 0)
+			cout << endl;
+	}
+	
+	if (state_) {
+		for (stateVec_iter it = state_list.begin();
+				it != state_list.end(); ++it) {
+			(*it)->printState();
+			cout << endl;
+		}
+
+		for (int i = 0; i < CONST_NUM_BRANCH; ++i)
+			if (branchCov[i])
+				cout << i << "(" << branchCov[i] << ") ";
+		cout << endl;
+	}
+	cout << endl;
 }
 
 // GA Population
@@ -233,10 +270,10 @@ void gaPopulation_t :: gaEvolve() {
 
 		gaCrossover(p1, p2, c1, c2);
 		assert ((c1 != NULL) && (c2 != NULL));
-		cout << endl 
-			 << size_ 
-			 << ": " << c1->input_vec.length()
-			 << ": " << c2->input_vec.length() << endl;
+//		cout << endl 
+//			 << size_ 
+//			 << ": " << c1->input_vec.length()
+//			 << ": " << c2->input_vec.length() << endl;
 
 		assert(c1->input_vec.length() == (uint)(indiv_vec_length * CONST_NUM_INPUT_BITS));
 		assert(c2->input_vec.length() == (uint)(indiv_vec_length * CONST_NUM_INPUT_BITS));

@@ -230,7 +230,9 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
 	//cout << "Simulating " << vecIn << endl;
 	
 	assert (vecIn.length() == (uint)CONST_NUM_INPUT_BITS);
+	#ifdef _ResetMask_
 	ModifyVecIn(vecIn, gVarClass::resetInput);
+	#endif
     while ((main_time < 2) && !Verilated::gotFinish()) {
     	if (start_sim(top))
             set_input(top, vecIn);

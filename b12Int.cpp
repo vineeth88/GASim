@@ -62,6 +62,8 @@ state_t::state_t(const Vtop* copy_obj, int index_) :
 		<< (bitset<6>)	copy_obj->v__DOT__count2;
 	
 	ss >> state_val;
+
+	GetCoverage(copy_obj, branch_index);
 }
 
 state_t::~state_t() {
@@ -126,8 +128,20 @@ string state_t::operator[] (int index_) {
 void state_t::printState (bool full_) {
 	if (full_)
     	cout << state_val << endl;
-	else
-		cout << getHash() << endl;
+	else {
+		cout << state_val.substr(8,2) 	<< " "  // data_out
+			 << state_val.substr(12,3) 	<< " "  // sound
+			 << state_val.substr(13,1) 	<< " "  // play
+			 << state_val.substr(17,3) 	<< " "  // counter
+			 << state_val.substr(86,5) 	<< " "  // gamma
+			 << state_val.substr(93,5) 	<< " "  // scan
+			 << state_val.substr(98,5) 	<< " "  // max
+			 << state_val.substr(109,6)	<< endl;   // count2
+		for (vector<int>::iterator it = branch_index.begin();
+				it != branch_index.end(); ++it)
+			cout << *it << " ";
+		cout << endl;
+	}
 }
 
 void state_t::setCktState(Vtop* top) {
@@ -311,7 +325,9 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
 	//cout << "Simulating " << vecIn << endl;
 	
 	assert (vecIn.length() == (uint)CONST_NUM_INPUT_BITS);
+	#ifdef _ResetMask_
 	ModifyVecIn(vecIn, gVarClass::resetInput);
+	#endif
     while ((main_time < 2) && !Verilated::gotFinish()) {
     	if (start_sim(top))
             set_input(top, vecIn);
@@ -325,7 +341,7 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
 }
 	
 
-int GetCoverage(Vtop* top, bool printCnt) {
+int GetCoverage(const Vtop* top, bool printCnt) {
     uint count = 0;
     for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
         if (top->__VlSymsp->__Vcoverage[ind]) {
@@ -340,12 +356,12 @@ int GetCoverage(Vtop* top, bool printCnt) {
     return count;
 }
 
-int GetCoverage(Vtop* top, int index) {
+int GetCoverage(const Vtop* top, int index) {
     assert((index >= 0) && (index < CONST_NUM_BRANCH));
     return top->__VlSymsp->__Vcoverage[index];
 }
 
-void GetCoverage(Vtop* top, vector<int>& indVec) {
+void GetCoverage(const Vtop* top, vector<int>& indVec) {
 	indVec.clear();
     for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
         if (top->__VlSymsp->__Vcoverage[ind]) {
@@ -355,7 +371,7 @@ void GetCoverage(Vtop* top, vector<int>& indVec) {
 
 }
 
-int GetBranchCounters(Vtop* top, vector<int>& branchHit) {
+int GetBranchCounters(const Vtop* top, vector<int>& branchHit) {
 	uint numBranchHit = 0;
 	if (branchHit.size() != (uint)CONST_NUM_BRANCH)
 		branchHit = vector<int>(CONST_NUM_BRANCH);

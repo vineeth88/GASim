@@ -14,7 +14,7 @@
 
 const int CONST_NUM_INPUT = 2;
 const int CONST_NUM_INPUT_BITS = 5;
-const int CONST_NUM_BRANCH = 104;
+const int CONST_NUM_BRANCH = 105;
 const int CONST_NUM_VARS = 8;
 const int CONST_NUM_STATE_BITS = 115;
 const int CONST_NUM_CTRL_BITS = 30;
@@ -28,10 +28,10 @@ void SimMultiCycle(Vtop*, int numCycles);
 void SimMultiCycle(Vtop*, vecIn_t&);
 void SimOneCycle(Vtop*, vecIn_t&);
 
-int GetCoverage(Vtop*, bool printCnt=false);					// Get #branches covered
-int GetCoverage(Vtop*, int);			// Get branch counter value[index]
-void GetCoverage(Vtop*, vector<int>&);	// Get all index[branch with coverage > 0]
-int GetBranchCounters(Vtop*, vector<int>&);
+int GetCoverage(const Vtop*, bool printCnt=false);					// Get #branches covered
+int GetCoverage(const Vtop*, int);			// Get branch counter value[index]
+void GetCoverage(const Vtop*, vector<int>&);	// Get all index[branch with coverage > 0]
+int GetBranchCounters(const Vtop*, vector<int>&);
 void GetResetBranch(Vtop*, vector<int>&);	// Get index[reset branch]
 
 void ResetCounters(Vtop*);			// Reset counters

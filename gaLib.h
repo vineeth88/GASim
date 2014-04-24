@@ -19,6 +19,9 @@ class gaIndiv_t {
 	fitness_t fitness;
 	vector<int> branchCov;
 
+	// Fitness inputs
+	int nBranches;
+
 	//Constructors
 	gaIndiv_t(int index_, int length_);
 	
@@ -34,7 +37,7 @@ class gaIndiv_t {
 	
 	void initRandom(int);
 	void seedIndiv(gaIndiv_t*, int, int);
-
+	void printIndiv(bool state_ = false);
 };
 
 class gaPopulation_t {

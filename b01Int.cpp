@@ -31,6 +31,7 @@ state_t::state_t(const Vtop* copy_obj, int state_index_) :
 	ss << (bitset<3>) copy_obj->v__DOT__process_1_stato;
 	ss >> state_val;
 
+	GetCoverage(copy_obj, branch_index);
 }
 
 state_t::~state_t() {
@@ -70,9 +71,9 @@ void state_t::printState (bool full_) {
 void state_t::setCktState(Vtop* top) {
 	int val = 0;
 	for(uint i = 0; i < state_val.length(); ++i) {
+		val = val << 1;
 		if (state_val[i] == '1')
 			val++;
-		val = val << 1;
 	}
     top->v__DOT__process_1_stato = val;
 }
@@ -161,7 +162,9 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
 	//cout << "Simulating " << vecIn << endl;
 	
 	assert (vecIn.length() == (uint)CONST_NUM_INPUT_BITS);
+	#ifdef _ResetMask_
 	ModifyVecIn(vecIn, gVarClass::resetInput);
+	#endif
     while ((main_time < 2) && !Verilated::gotFinish()) {
     	if (start_sim(top))
             set_input(top, vecIn);
@@ -175,7 +178,7 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
 }
 	
 
-int GetCoverage(Vtop* top, bool printCnt) {
+int GetCoverage(const Vtop* top, bool printCnt) {
     uint count = 0;
     for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
         if (top->__VlSymsp->__Vcoverage[ind]) {
@@ -190,12 +193,12 @@ int GetCoverage(Vtop* top, bool printCnt) {
     return count;
 }
 
-int GetCoverage(Vtop* top, int index) {
+int GetCoverage(const Vtop* top, int index) {
     assert((index >= 0) && (index < CONST_NUM_BRANCH));
     return top->__VlSymsp->__Vcoverage[index];
 }
 
-void GetCoverage(Vtop* top, vector<int>& indVec) {
+void GetCoverage(const Vtop* top, vector<int>& indVec) {
 	indVec.clear();
     for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
         if (top->__VlSymsp->__Vcoverage[ind]) {
@@ -205,7 +208,7 @@ void GetCoverage(Vtop* top, vector<int>& indVec) {
 
 }
 
-int GetBranchCounters(Vtop* top, vector<int>& branchHit) {
+int GetBranchCounters(const Vtop* top, vector<int>& branchHit) {
 	uint numBranchHit = 0;
 	if (branchHit.size() != (uint)CONST_NUM_BRANCH)
 		branchHit = vector<int>(CONST_NUM_BRANCH);
