@@ -8,9 +8,11 @@ rstIn_t gVarClass::resetInput = rstIn_t(CONST_NUM_INPUT_BITS, 'X');
 class ga_Gen0_Param {
 	
 public:
-	int 	NUM_INDIV, VEC_LENGTH;
-	int 	NUM_TOP_INDIV;
-	int 	NUM_GEN, POP_SIZE;
+	string fName;
+
+	int 	NUM_INDIV_0, INDIV_LEN_0;
+	int 	NUM_TOP_INDIV_0;
+	int 	NUM_GEN_0, POP_SIZE_0;
 
 	vecIn_t			inputVec;
 	state_t			*startState, *endState;
@@ -20,14 +22,28 @@ public:
 		startState = endState = NULL;
 		branchHit = vector<int>(CONST_NUM_BRANCH, 0);
 	}
+
+	~ga_Gen0_Param() {
+		if (startState) {
+			delete startState;
+			startState = NULL;
+		}
+		if(endState) {
+			delete endState;
+			endState = NULL;
+		}
+		branchHit = vector<int>();
+	}
 };
 
-void ga_Gen0_generateVectors(ga_Gen0_Param* objGen0);
-int checkCoverage(const vecIn_t&);
+void readParam(ga_Gen0_Param*);
+void ga_Gen0_generateVectors(ga_Gen0_Param*);
+
+int checkCoverage(const vecIn_t&, vector<int>&);
 void mapDisplay(stateMap_t&);
 void printVec(vector<int>&);
 void printCnt(vector<int>&);
-void PrintVectorSet(const vecIn_t& inputVec);
+void PrintVectorSet(const vecIn_t& inputVec, int vecIndex = -1);
 
 int main(int argc, char* argv[]) {
 
@@ -65,31 +81,61 @@ int main(int argc, char* argv[]) {
         }
     }
 #endif
+	
+	char paramFile[100];
+	sprintf(paramFile, "%s.param", benchCkt);
+
+	if (argc >= 2) {
+        if (strcmp(argv[1], "-h") == 0) {
+            cout << "Input format: " << endl
+                << argv[0] << " "
+                << argv[1] << " <ckt>.param " << endl;
+        }
+        else {
+            sprintf(paramFile, "%s", argv[1]);
+            cout << "Reading " << paramFile << endl;
+        }
+	}		
 
    	ga_Gen0_Param *objGen0 = new ga_Gen0_Param;
-	objGen0->NUM_GEN = 8;
-	objGen0->POP_SIZE = 256;
-	objGen0->VEC_LENGTH = 20/CONST_NUM_INPUT_BITS;
-	objGen0->NUM_INDIV = 5;
-	objGen0->NUM_TOP_INDIV = 4;
+	objGen0->fName = string(paramFile);
+	readParam(objGen0);
+
+//	objGen0->NUM_GEN = 8;
+//	objGen0->POP_SIZE = 256;
+//	objGen0->VEC_LENGTH = 20/CONST_NUM_INPUT_BITS;
+//	objGen0->NUM_INDIV = 5;
+//	objGen0->NUM_TOP_INDIV = 4;
 
 #ifdef __b12
 	objGen0->inputVec += vecIn_t("00000");
-
 #endif
+
 	ga_Gen0_generateVectors(objGen0);
-	checkCoverage(objGen0->inputVec);
-	PrintVectorSet(objGen0->inputVec);
+	
+	vector<int> brCoverage;
+	int vecIndex = checkCoverage(objGen0->inputVec, brCoverage);
+	PrintVectorSet(objGen0->inputVec, vecIndex);
+	if (objGen0->inputVec.length() > (uint) (vecIndex * CONST_NUM_INPUT_BITS))
+		cout << "Max coverage achieved in " << vecIndex << " vectors" << endl;
+	else {
+
+
+
+	}
+
+	delete objGen0;
 
 }
 
+
 void ga_Gen0_generateVectors(ga_Gen0_Param* objGen) {
 
-	int NUM_GEN	= objGen->NUM_GEN;
-	int POP_SIZE = objGen->POP_SIZE;
-	int VEC_LEN	= objGen->VEC_LENGTH;
-	int NUM_INDIV = objGen->NUM_INDIV;
-	int TOP_INDIV = objGen->NUM_TOP_INDIV;
+	int NUM_GEN	= objGen->NUM_GEN_0;
+	int POP_SIZE = objGen->POP_SIZE_0;
+	int VEC_LEN	= objGen->INDIV_LEN_0 / CONST_NUM_INPUT_BITS;
+	int NUM_INDIV = objGen->NUM_INDIV_0;
+	//int TOP_INDIV = objGen->NUM_TOP_INDIV;
 	
 	cout << "GA Stage 1: " << endl
 		 << POP_SIZE << " individuals / " << VEC_LEN << " vectors" << endl;
@@ -191,16 +237,16 @@ void ga_Gen0_generateVectors(ga_Gen0_Param* objGen) {
 				 << "Average Coverage: " << avgCov << endl
 				 << "Max Coverage: " << maxCov << " (" << maxInd << ")" << endl;
 
-
+			int covThresh = avgCov + (maxCov - avgCov + 1)/2;
 			// Compute Fitness 
 			for (int i = 0; i < gen0Pop.pop_size; ++i) {
 				
 			 	gaIndiv_t* tmpIndiv = gen0Pop.indiv_vec[i];
-			 	
-			// 	if (tmpIndiv->nBranches > avgCov / POP_SIZE)
+				 	
+			 	if (tmpIndiv->nBranches > covThresh)
 			 		tmpIndiv->printIndiv(1);
-			// 	else
-			// 		tmpIndiv->printIndiv(0);
+			 	else
+			 		tmpIndiv->printIndiv(0);
 
 				// Fitness for coverage
 				int cov_fitness = ((avgCov - tmpIndiv->nBranches) * CONST_FIT_COV);
@@ -324,52 +370,139 @@ void ga_Gen0_generateVectors(ga_Gen0_Param* objGen) {
 	}
 
 	objGen->endState = startState;
+	delete cktVar;
 
+	cout << "End of Stage 1" << endl << endl;
 }
-int checkCoverage(const vecIn_t& inputVec) {
+
+int checkCoverage(const vecIn_t& inputVec, vector<int>& brCoverage) {
 	
-	Vtop* top = new Vtop;
+	Vtop* ckt = new Vtop;
 
 	int numVec = inputVec.length()/CONST_NUM_INPUT_BITS;
-	vector<int> brCoverage(CONST_NUM_BRANCH, 0);
-	set<int> brSet;
+	brCoverage = vector<int>(CONST_NUM_BRANCH, 0);
 	
 	// Add reset branches to the set 
 	vector<int> resetBranch;
-	GetResetBranch(top, resetBranch);
+	GetResetBranch(ckt, resetBranch);
 	for (vector<int>::iterator it = resetBranch.begin();
 			it != resetBranch.end(); ++it) {
-		brSet.insert(*it);
+		brCoverage[*it] = 1;
 	}
 
-	int index;
+	int index = -1;
+	int nBranch = resetBranch.size();
 
 	for (int i = 0; i < numVec; ++i) {
 		string inputStr = inputVec.substr(i*CONST_NUM_INPUT_BITS, CONST_NUM_INPUT_BITS);
 		cout << inputStr << endl;
-		SimOneCycle(top, inputStr);
-//		printCktState(top);
+		SimOneCycle(ckt, inputStr);
+//		printCktState(ckt);
 
 		vector<int> currBranch;
-		GetCoverage(top, currBranch);
+		GetCoverage(ckt, currBranch);
 		for (vector<int>::iterator it = currBranch.begin();
 				it != currBranch.end(); ++it) {
+			if (brCoverage[*it] == 0)
+				nBranch++;
 			brCoverage[*it]++;
-			brSet.insert(*it);
 		}
 	
-		if(brSet.size() == CONST_NUM_BRANCH-1) {
+		if(nBranch == CONST_NUM_BRANCH-1) {
 			index = i;
 			cout << "#Vectors = " << index << endl;
 			break;
 		}
 
 	}
-	cout << "Coverage: " << GetCoverage(top, true) << endl;
+	cout << "Coverage: " << GetCoverage(ckt, true) << endl;
+
+	delete ckt;
 	return index;
+
 }
 
+void readParam(ga_Gen0_Param* paramObj) {
+	
+	ifstream paramIn;
+	paramIn.open((paramObj->fName).c_str(), ios::in);
 
+	if (!paramIn) {
+		cout << "Unable to read " << paramObj->fName << endl
+			 << "Using default values. " << endl
+			 << "NUM_GEN_0 	: 4 generations" << endl
+			 << "POP_SIZE_0	: 256 individuals" << endl
+			 << "INDIV_LEN_0: 20 bits" << endl
+			 << "NUM_INDIV_0: 2 rounds" << endl;
+		
+		paramObj->NUM_GEN_0 = 4;
+		paramObj->POP_SIZE_0 = 256;
+		paramObj->INDIV_LEN_0 = 20;
+		paramObj->NUM_INDIV_0 = 2;
+	}	
+	else {
+		while(paramIn) {
+			string curr;
+			getline(paramIn, curr);
+
+			if (curr.find("NUM_GEN_0") != string::npos) {
+				size_t ind = curr.find("=");
+				if (ind != string::npos) {
+					stringstream ss;
+					int val;
+					ss << curr.substr(ind+1);
+					ss >> val;
+					cout << "NUM_GEN_0 = " << val << endl;
+					paramObj->NUM_GEN_0 = val;
+				}
+				else 
+					paramObj->NUM_GEN_0 = 4;
+			}
+			else if (curr.find("POP_SIZE_0") != string::npos) {
+				size_t ind = curr.find("=");
+				if (ind != string::npos) {
+					stringstream ss;
+					int val;
+					ss << curr.substr(ind+1);
+					ss >> val;
+					cout << "POP_SIZE_0 = " << val << endl;
+					paramObj->POP_SIZE_0 = val;
+				}
+				else 
+					paramObj->POP_SIZE_0 = 256;
+			}
+			else if (curr.find("INDIV_LEN_0") != string::npos) {
+				size_t ind = curr.find("=");
+				if (ind != string::npos) {
+					stringstream ss;
+					int val;
+					ss << curr.substr(ind+1);
+					ss >> val;
+					cout << "INDIV_LEN_0 = " << val << endl;
+					paramObj->INDIV_LEN_0 = val;
+				}
+				else 
+					paramObj->INDIV_LEN_0 = 20;
+			}
+			else if (curr.find("NUM_INDIV_0") != string::npos) {
+				size_t ind = curr.find("=");
+				if (ind != string::npos) {
+					stringstream ss;
+					int val;
+					ss << curr.substr(ind+1);
+					ss >> val;
+					cout << "NUM_INDIV_0 = " << val << endl;
+					paramObj->NUM_INDIV_0 = val;
+				}
+				else 
+					paramObj->NUM_INDIV_0 = 2;
+			}
+
+		}
+		cout << "Finished parsing " << paramObj->fName << endl;
+		paramIn.close();
+	}
+}
 
 void mapDisplay(stateMap_t& stateMap) {
 	for (stateMap_iter it = stateMap.begin(); it!= stateMap.end(); ++it) {
@@ -386,15 +519,23 @@ void printVec(vector<int>& vec_) {
 }
 
 void printCnt(vector<int>& vec_) {
-	for (int v = 0; v < vec_.size(); ++v)
+	for (uint v = 0; v < vec_.size(); ++v)
 		cout << v << "(" << vec_[v] << ") ";
 	cout << endl;
 }
 
-void PrintVectorSet(const vecIn_t& inputVec ) {
-
-	cout << endl << "# Vectors: " << inputVec.size()/CONST_NUM_INPUT_BITS << endl;
-	for (uint i = 0; i < inputVec.length(); i++) {
+void PrintVectorSet(const vecIn_t& inputVec, int vecIndex) {
+	
+	uint len = 0;
+	if (vecIndex < 0)
+		len = inputVec.length();
+	else {
+		len = (uint) (vecIndex * CONST_NUM_INPUT_BITS);
+		if (len > inputVec.length())
+			len = inputVec.length();
+	}
+	cout << endl << "# Vectors: " << len/(uint) CONST_NUM_INPUT_BITS << endl;
+	for (uint i = 0; i < len; i++) {
 		cout << inputVec[i];
 		if ((i+1) % CONST_NUM_INPUT_BITS == 0)
 			cout << endl;
