@@ -65,7 +65,7 @@ string state_t::operator[] (int index_) {
 }
 
 void state_t::printState (bool full_) {
-    cout << state_val << endl;
+    cout <<  state_val << endl;
 }
 
 void state_t::setCktState(Vtop* top) {

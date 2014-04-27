@@ -12,18 +12,23 @@ class gaIndiv_t {
 	public:
 
 	int index;
+	
 	int vec_length;
 	vecIn_t input_vec;
 
-	vector<state_t*> state_list;
-	fitness_t fitness;
-	vector<int> branchCov;
+	state_t* start_state;
+	state_pVec state_list;
 
-	// Fitness inputs
-	int nBranches;
+	vector<int> branch_cov;
+	vector<int> branch_cycle;
+	int max_index;
+	int num_branch;
+
+	fitness_t fitness;
 
 	//Constructors
 	gaIndiv_t(int index_, int length_);
+	gaIndiv_t(int index_, int length_, state_t*);
 	
 	//Destructors
 	~gaIndiv_t();
@@ -46,14 +51,14 @@ class gaPopulation_t {
 	
 	int pop_size;
 	int indiv_vec_length;
-	vector<gaIndiv_t*> indiv_vec;
+	gaIndiv_pVec indiv_vec;
 	vector<fitness_t> fitness_set;
 
 	gaPopulation_t(int pop_size_, int indiv_vec_length_);
 
 	~gaPopulation_t();
 
-	void initPopulation();
+	void initPopulation(const state_pVec&);
 
 	// GA Operators
 	int gaSelect(gaIndiv_t*&, gaIndiv_t*&);
