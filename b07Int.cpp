@@ -38,6 +38,8 @@ state_t::state_t(const Vtop* copy_obj, int state_index_) :
 	for (int i = 0; i < 16; ++i)
 		ss << (bitset<8>) copy_obj->v__DOT__mem[i];
 	ss >> state_val;
+
+	GetCoverage(copy_obj, branch_index);
 }
 
 state_t::~state_t() {
@@ -94,16 +96,26 @@ string state_t::operator[] (int index_) {
 }
 
 void state_t::printState (bool full_) {
-    cout << state_val << endl;
+	cout << state_val.substr(0,3) << " "  
+		 << state_val.substr(3,8) << " "
+		 << state_val.substr(11,8)<< " "
+		 << state_val.substr(19,8)<< " " 
+		 << state_val.substr(27,8)<< " "
+		 << state_val.substr(35,8)<< " ";
+	if (full_)
+	for (int i = 43; i < 128+43; i += 8)
+		cout << state_val.substr(i,8) << " ";
+	cout << endl;
+
 }
 
 void state_t::setCktState(Vtop* top) {
 	int val = 0;
 	for(int i = 0; i < 43; ++i) {
 
+		val = val << 1;
 		if (state_val[i] == '1')
 			val++;
-		val = val << 1;
 
 		switch(i+1) {
 			case 3 :	top->v__DOT__stato= val;
@@ -136,9 +148,9 @@ void state_t::setCktState(Vtop* top) {
 
 	for (int i = 0; i < 128; i++) {
 
+		val = val << 1;
 		if (state_val[43+i] == '1')
 			val++;
-		val = val << 1;
 		
 		if (i && (i % 8 == 7))
 			top->v__DOT__mem[i/8] = val;
@@ -201,7 +213,7 @@ void SimMultiCycle(Vtop* top, vecIn_t& inputVec) {
     int rstCycle = 10;
 
 	int vec_length = (inputVec.length()/CONST_NUM_INPUT_BITS);
-	cout << "SimMultiCycle (" << vec_length << ")" << endl;    
+//	cout << "SimMultiCycle (" << vec_length << ")" << endl;    
 
     while ((main_time < (rstCycle + 2*vec_length))
             && !Verilated::gotFinish()) {
@@ -245,7 +257,7 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
    	
 }
 
-int GetCoverage(Vtop* top, bool printCnt) {
+int GetCoverage(const Vtop* top, bool printCnt) {
     uint count = 0;
     for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
         if (top->__VlSymsp->__Vcoverage[ind]) {
@@ -260,12 +272,12 @@ int GetCoverage(Vtop* top, bool printCnt) {
     return count;
 }
 
-int GetCoverage(Vtop* top, int index) {
+int GetCoverage(const Vtop* top, int index) {
     assert((index >= 0) && (index < CONST_NUM_BRANCH));
     return top->__VlSymsp->__Vcoverage[index];
 }
 
-void GetCoverage(Vtop* top, vector<int>& indVec) {
+void GetCoverage(const Vtop* top, vector<int>& indVec) {
 	indVec.clear();
     for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
         if (top->__VlSymsp->__Vcoverage[ind]) {
@@ -275,7 +287,7 @@ void GetCoverage(Vtop* top, vector<int>& indVec) {
 
 }
 
-int GetBranchCounters(Vtop* top, vector<int>& branchHit) {
+int GetBranchCounters(const Vtop* top, vector<int>& branchHit) {
 	uint numBranchHit = 0;
 	if (branchHit.size() != (uint)CONST_NUM_BRANCH)
 		branchHit = vector<int>(CONST_NUM_BRANCH);

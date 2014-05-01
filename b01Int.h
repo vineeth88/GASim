@@ -42,9 +42,9 @@ void printCktState(Vtop*);
 // Functions
 
 inline
-bool IsExcludedBranch(const int i)
+bool IsDefaultBranch(const int i)
 {
-    return (i == 0); // reset branch
+    return false; // default branch
 }
 
 // Circuit Simulation Functions

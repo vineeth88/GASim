@@ -38,6 +38,8 @@ state_t::state_t(const Vtop* copy_obj, int index_) :
    		<< (bitset<1>) copy_obj->v__DOT__last_r;
 
 	ss >> state_val;
+
+	GetCoverage(copy_obj, branch_index);
 }
 
 state_t::~state_t() {
@@ -101,11 +103,16 @@ string state_t::operator[] (int index_) {
 
 void state_t::printState (bool full_) {
     cout << state_val << endl;
+
+	for (vector<int>::iterator it = branch_index.begin();
+			it != branch_index.end(); ++it)
+		cout << *it << " ";
+	cout << endl;
 }
 
 void state_t::setCktState(Vtop* top) {
 	int val = 0;
-	for(int i = 0; i < 14; ++i) {
+	for(uint i = 0; i < state_val.length(); ++i) {
 
 		val = val << 1;
 		if (state_val[i] == '1')
@@ -227,7 +234,6 @@ void SimMultiCycle(Vtop* top, vecIn_t& inputVec) {
     int rstCycle = 10;
 
 	int vec_length = (inputVec.length()/CONST_NUM_INPUT_BITS);
-	cout << "SimMultiCycle (" << vec_length << ")" << endl;    
 
     while ((main_time < (rstCycle + 2*vec_length))
             && !Verilated::gotFinish()) {
@@ -272,7 +278,7 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
 }
 	
 
-int GetCoverage(Vtop* top, bool printCnt) {
+int GetCoverage(const Vtop* top, bool printCnt) {
     uint count = 0;
     for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
         if (top->__VlSymsp->__Vcoverage[ind]) {
@@ -287,12 +293,12 @@ int GetCoverage(Vtop* top, bool printCnt) {
     return count;
 }
 
-int GetCoverage(Vtop* top, int index) {
+int GetCoverage(const Vtop* top, int index) {
     assert((index >= 0) && (index < CONST_NUM_BRANCH));
     return top->__VlSymsp->__Vcoverage[index];
 }
 
-void GetCoverage(Vtop* top, vector<int>& indVec) {
+void GetCoverage(const Vtop* top, vector<int>& indVec) {
 	indVec.clear();
     for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
         if (top->__VlSymsp->__Vcoverage[ind]) {
@@ -302,7 +308,7 @@ void GetCoverage(Vtop* top, vector<int>& indVec) {
 
 }
 
-int GetBranchCounters(Vtop* top, vector<int>& branchHit) {
+int GetBranchCounters(const Vtop* top, vector<int>& branchHit) {
 	uint numBranchHit = 0;
 	if (branchHit.size() != (uint)CONST_NUM_BRANCH)
 		branchHit = vector<int>(CONST_NUM_BRANCH);
@@ -318,7 +324,7 @@ int GetBranchCounters(Vtop* top, vector<int>& branchHit) {
 
 void GetResetBranch(Vtop* top, vector<int>& resetBranch) {
     SimMultiCycle(top, 0);
-	GetBranchCounters(top, resetBranch);
+	GetCoverage(top, resetBranch);
 }
 
 void ResetCounters(Vtop* top) {
