@@ -112,6 +112,8 @@ void gaIndiv_t :: simCkt(Vtop* ckt) {
 	start_state->setCktState(ckt);
 
 	cout << index << ": " << vec_length << endl;
+	printCktState(ckt);
+
 	branch_cycle = vector<int>(vec_length,0);
 	branch_cov = vector<int>(CONST_NUM_BRANCH,0);
 

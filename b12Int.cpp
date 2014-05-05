@@ -129,6 +129,10 @@ void state_t::printState (bool full_) {
 	if (full_)
     	cout << state_val << endl;
 	else {
+		if(state_val.length() < 115) {
+			cout << state_val.length() << endl;
+			assert(false);
+		}
 		cout << state_val.substr(8,2) 	<< " "  // data_out
 			 << state_val.substr(12,3) 	<< " "  // sound
 			 << state_val.substr(13,1) 	<< " "  // play
