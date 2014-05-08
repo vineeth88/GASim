@@ -77,6 +77,9 @@ typedef vector<gaIndiv_t*> gaIndiv_pVec;
 typedef vector<gaIndiv_t*>::iterator gaIndiv_pVec_iter;
 typedef int fitness_t;
 
+typedef vector<int> int_vec;
+typedef vector<int>::iterator int_vec_iter;
+
 class state_t {
 
 	public:

@@ -178,7 +178,7 @@ int readGraph(graph& graphCov) {
 			tmpNode.child_index.push_back(tmpIndex);
 		}
 
-		tmpNode.printNode();
+//		tmpNode.printNode();
 		graphCov.gNodes.push_back(tmpNode);
 		if (bInd_ != -1)
 			graphCov.branchMap[bInd_] = index;
@@ -226,7 +226,6 @@ int graph::getTopNode(int branch_) {
 		}
 		
 		curr_node = gNodes[curr_node].parent_index[0];
-
 	}
 	
 	return topNode; 

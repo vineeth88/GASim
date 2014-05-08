@@ -175,14 +175,14 @@ void set_input(Vtop *top, const vecIn_t& input)
 			top->v_in++;
 	}
 
-	cout << (uint) top->r_button
-		 << (uint) top->g_button
-		 << (uint) top->key 	
-		 << (uint) top->start 	
-		 << (uint) top->test 	
-		 << (uint) top->rts 	
-		 << (uint) top->rtr 	
-		 << (uint) top->v_in << endl;
+//	cout << (uint) top->r_button
+//		 << (uint) top->g_button
+//		 << (uint) top->key 	
+//		 << (uint) top->start 	
+//		 << (uint) top->test 	
+//		 << (uint) top->rts 	
+//		 << (uint) top->rtr 	
+//		 << (uint) top->v_in << endl;
 
 }
 
