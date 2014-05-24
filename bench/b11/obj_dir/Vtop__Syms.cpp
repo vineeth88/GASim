@@ -19,4 +19,3 @@ Vtop__Syms::Vtop__Syms(Vtop* topp, const char* namep)
     TOPp->__Vconfigure(this, true);
     // Setup scope names
 }
-

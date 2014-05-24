@@ -87,6 +87,6 @@ VL_MODULE(Vtop) {
     static void	_eval_initial(Vtop__Syms* __restrict vlSymsp);
     static void	_eval_settle(Vtop__Syms* __restrict vlSymsp);
     static void	_sequent__TOP__1(Vtop__Syms* __restrict vlSymsp);
-} VL_ATTR_ALIGNED(64);
+} VL_ATTR_ALIGNED(128);
 
 #endif  /*guard*/

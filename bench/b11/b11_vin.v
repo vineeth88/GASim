@@ -100,9 +100,9 @@ begin
                                         cont1 = r_in;
                                         stato = `s_dataout;
                                 end
-                                else if (r_in <= 26)	// 9
+                                else if (r_in <= 26)	// 8
                                         stato = `s_mul;
-                                else	// 8
+                                else	// 9
                                         stato = `s_datain;
                         end
 
@@ -155,11 +155,11 @@ begin
                         begin
                                 if (((r_in / 4) % 4) == 0)	// 23
                                         cont1 = cont1 - 21;
-                                else if (((r_in / 4) % 4) == 1)	// 26
+                                else if (((r_in / 4) % 4) == 1)	// 24
                                         cont1 = cont1 - 42;
                                 else if (((r_in / 4) % 4 )== 2)	// 25
                                         cont1 = cont1 + 7;
-                                else	// 24
+                                else	// 26
                                         cont1 = cont1 + 28;
                                 stato = `s_dataout;
                         end

@@ -10,11 +10,11 @@ default: Vtop__ALL.a
 # Perl executable (from $PERL)
 PERL = perl
 # Path to Verilator kit (from $VERILATOR_ROOT)
-VERILATOR_ROOT = /usr/share/verilator
+VERILATOR_ROOT = /usr/local/share/verilator
 # Path to SystemPerl kit top (from $SYSTEMPERL)
-SYSTEMPERL = /home/vineeth/Research/Tools/SystemPerl
+SYSTEMPERL = /home/vineeth/Tools/SystemPerl/
 # Path to SystemPerl kit includes (from $SYSTEMPERL_INCLUDE)
-SYSTEMPERL_INCLUDE = /home/vineeth/Research/Tools/SystemPerl/src
+SYSTEMPERL_INCLUDE = /home/vineeth/Tools/SystemPerl//src/
 # SystemC include directory with systemc.h (from $SYSTEMC_INCLUDE)
 SYSTEMC_INCLUDE ?= 
 # SystemC library directory with libsystemc.a (from $SYSTEMC_LIBDIR)
@@ -39,6 +39,7 @@ VM_PREFIX = Vtop
 VM_MODPREFIX = Vtop
 # User CFLAGS (from -CFLAGS on Verilator command line)
 VM_USER_CFLAGS = \
+	-g \
 
 # User LDLIBS (from -LDFLAGS on Verilator command line)
 VM_USER_LDLIBS = \
