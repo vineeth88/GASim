@@ -1,4 +1,5 @@
 #include "incl.h"
+#include "verInclude.h"
 
 using namespace std;
 
@@ -58,28 +59,44 @@ class graphNode {
 class graph {
 	
 	public:
+	
+	char fName[100];
 
 	uint numNodes;
 	vector<graphNode> gNodes;
 	uint rootNode;
 	set<uint> leafNodes;
 
+	vector<int> branchMap;
+
 	graph() {
 		// The root node is 0. Therefore nodes should start from gNodes[1]
 		gNodes = vector<graphNode>(1);
 		numNodes = 0;
 		rootNode = 0;
+
+		branchMap = vector<int>(CONST_NUM_BRANCH);
 	}
 
 	graph(uint num_, uint root_) {
 		numNodes = num_;
 		rootNode = root_;
 		gNodes = vector<graphNode>(numNodes);
+
+		branchMap = vector<int>(CONST_NUM_BRANCH);
 	}
 
+	graphNode& operator [](int index_) {
+		assert((index_ > 0) && ((uint)index_ < gNodes.size()));
+		return gNodes[index_];
+	}
 	bool isLeafNode(uint index_);
 	void getDominators(uint, vector<uint>&);
+	void getPath(int, vector<int>&);
+	int getTopNode(int);
+
 };
 
 int readGraph(graph&, char[]);
+int readGraph(graph&);
 

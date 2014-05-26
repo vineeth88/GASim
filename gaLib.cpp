@@ -10,7 +10,23 @@ gaIndiv_t::gaIndiv_t (int index_, int vec_length_) :
 	input_vec.clear();
 	state_list = vector<state_t*> (vec_length, NULL);
 	fitness = 0;
-	branchCov = vector<int>();
+	branch_cov = vector<int>(CONST_NUM_BRANCH, 0);
+	branch_cycle = vector<int>(vec_length, 0);
+	max_index = -1, num_branch = 0;
+}
+
+gaIndiv_t::gaIndiv_t (int index_, int vec_length_, state_t* start_) :
+	index(index_),
+	vec_length(vec_length_) 
+{
+	//input_vec = string(vec_length * CONST_NUM_INPUT_BITS, 'X');
+	input_vec.clear();
+	start_state = start_;
+	state_list = vector<state_t*> (vec_length, NULL);
+	fitness = 0;
+	branch_cov = vector<int>(CONST_NUM_BRANCH, 0);
+	branch_cycle = vector<int>(vec_length, 0);
+	max_index = -1, num_branch = 0;
 }
 
 gaIndiv_t::~gaIndiv_t() {
@@ -22,50 +38,132 @@ gaIndiv_t::~gaIndiv_t() {
 		}
 	}
 	state_list.clear();
+	branch_cov.clear();
 }
 
-bool gaIndiv_t :: operator<(gaIndiv_t* indiv) const {
+bool gaIndiv_t :: operator<(gaIndiv_t* indiv_) const {
+	// TODO
 
-	return false;
-}
-
-bool gaIndiv_t :: operator==(gaIndiv_t* indiv) const {
-
-	return false;
-}
-
-void gaIndiv_t :: simCkt(Vtop* top) {
+	if (num_branch > indiv_->num_branch)
+		return false;
+	else {
+		keyVal_t hash_ = (indiv_->start_state)->getHash();
+		int eqFl = hash_.compare(start_state->getHash());
+		if (eqFl < 0)
+			return false;
+		else if (eqFl > 0)
+			return true;
+	}
 	
-	cout << "simCkt: " << input_vec.length() << endl;
+	return false;
+}
+
+bool gaIndiv_t :: operator==(gaIndiv_t* indiv_) const {
+	// TODO
+	if (num_branch != indiv_->num_branch)
+		return false;
+	else {
+		keyVal_t hash_ = (indiv_->start_state)->getHash();
+		/* Compare start states	*/
+		if (hash_.compare(start_state->getHash()))
+			return false;
+
+		/* Compare if same branches reached	
+		EDIT: 
+		If same states reached, then same branches reached*/
+
+//		assert(branch_cov.size() == (uint)CONST_NUM_BRANCH);
+//		assert(indiv_->branch_cov.size() == (uint)CONST_NUM_BRANCH);
+//		bool ret = false;
+//		for (int i = 0; i < CONST_NUM_BRANCH; ++i) {
+//			if ((branch_cov[i] == 0) && (indiv_->branch_cov[i]))
+//				ret = true;
+//			else if ((branch_cov[i]) && (indiv_->branch_cov[i] == 0))
+//				ret = true;
+//		}
+//
+//		if (ret == false)
+//			return false;
+//		else {
+		
+		/* Compare if state lists are identical	*/
+		bool state_comp = true;
+		assert(state_list.size() == (uint)vec_length);
+		assert(indiv_->state_list.size() == (uint)vec_length);
+		
+		keyVal_t hash1, hash2;
+		for (int st = 0; st < vec_length && state_comp; ++st) {
+			hash1 = state_list[st]->getHash();
+			hash2 = (indiv_->state_list[st])->getHash();
+
+			state_comp = (hash1.compare(hash2) == 0);
+		}
+		
+		return state_comp;
+	}
+	return true;
+}
+
+void gaIndiv_t :: simCkt(Vtop* ckt) {
+	
 	assert(input_vec.length() == (uint)(vec_length * CONST_NUM_INPUT_BITS));
 	int cycle = 0;
-	sim_reset_clock(top);
+	sim_reset_clock(ckt);
+	start_state->setCktState(ckt);
 
-	for (cycle = 0; cycle < vec_length; ++cycle )
-		simCkt(top, cycle);
+//	cout << index << ": " << vec_length << endl;
+//	printCktState(ckt);
 
+	branch_cycle = vector<int>(vec_length,0);
+	branch_cov = vector<int>(CONST_NUM_BRANCH,0);
+
+	for (cycle = 0; cycle < vec_length; ++cycle ) {
+		simCkt(ckt, cycle);
+		if (cycle) 
+			branch_cycle[cycle] += branch_cycle[cycle-1];
+	}
+
+	num_branch = 0;
+	for (int br = 0; br < CONST_NUM_BRANCH; ++br)
+		if (branch_cov[br])
+			num_branch++;
+	
+	max_index = 0;
+	for (cycle = 1; cycle < vec_length; ++cycle) {
+		if ((branch_cycle[cycle] == num_branch) &&
+			(branch_cycle[cycle] > branch_cycle[cycle-1])) 
+			max_index = cycle;
+	}	
 	return;
 }
 
-void gaIndiv_t :: simCkt(Vtop* top, int cycle) {
+void gaIndiv_t :: simCkt(Vtop* ckt, int cycle) {
 	
 	assert(cycle < vec_length);
 
 	vecIn_t inp = input_vec.substr(cycle*CONST_NUM_INPUT_BITS, CONST_NUM_INPUT_BITS);
-	SimOneCycle(top, inp);
+	SimOneCycle(ckt, inp);
 
-	input_vec.replace(cycle*CONST_NUM_INPUT_BITS, CONST_NUM_INPUT_BITS, inp);	
+/* 	Not required as modifyVecIn has been disabled	*/
+//	input_vec.replace(cycle*CONST_NUM_INPUT_BITS, CONST_NUM_INPUT_BITS, inp);	
 	
-	state_t *tmp_state = new state_t(top, cycle);
+	state_t *tmp_state = new state_t(ckt, cycle);
+	tmp_state->pIndiv = this;
+
 	state_list[cycle] = tmp_state;
 
+	for(vector<int>::iterator it = tmp_state->branch_index.begin();
+			it != tmp_state->branch_index.end(); ++it) {
+		if (branch_cov[*it] == 0)
+			branch_cycle[cycle]++;
+		branch_cov[*it]++;
+	}
+
+	ResetCounters(ckt);
 }
 	
 void gaIndiv_t :: initRandom(int start_) {
 	
-//	cout << "initRandom: "
-//		 << input_vec.length() << " - " << (start_ * CONST_NUM_INPUT_BITS) << endl;
-
 	assert (input_vec.length() == (uint)(start_ * CONST_NUM_INPUT_BITS));
 
     for (int i = start_; i < vec_length; i++) {
@@ -73,7 +171,6 @@ void gaIndiv_t :: initRandom(int start_) {
         RandomVecIn(tmpVec);
         input_vec += tmpVec;
     }
-//	cout << input_vec.length() << " - " << (vec_length * CONST_NUM_INPUT_BITS) << endl;
 	assert(input_vec.length() == (uint)(vec_length * CONST_NUM_INPUT_BITS));
 }
 
@@ -83,6 +180,37 @@ void gaIndiv_t :: seedIndiv(gaIndiv_t* indiv, int start_, int len_) {
 	input_vec = input_vec.substr(0,start_) 
 				+ (indiv->input_vec).substr(start_, len_);
 	
+}
+
+void gaIndiv_t :: printIndiv(bool full_) {
+	
+	cout << endl << "I: " << index << endl;
+	for (uint i = 0; i < input_vec.length(); i++) {
+		cout << input_vec[i];
+		if ((i+1) % CONST_NUM_INPUT_BITS == 0)
+			cout << endl;
+	}
+	
+	if (full_) {
+		cout << endl;
+
+		for (state_pVec_iter it = state_list.begin();
+				it != state_list.end(); ++it) {
+			(*it)->printState();
+		}
+		cout << endl;
+
+		for (vector<int>::iterator it = branch_cycle.begin();
+				it != branch_cycle.end(); ++it)
+			cout << *it << " ";
+		cout << endl;
+
+		for (int i = 0; i < CONST_NUM_BRANCH; ++i)
+			if (branch_cov[i])
+				cout << i << "(" << branch_cov[i] << ") ";
+		cout << endl;
+	}
+	cout << endl;
 }
 
 // GA Population
@@ -104,10 +232,17 @@ gaPopulation_t :: ~gaPopulation_t() {
 	indiv_vec.clear();
 }
 	
-void gaPopulation_t :: initPopulation() {
+void gaPopulation_t :: initPopulation(const state_pVec& startPool) {
 	for (int i = 0; i < pop_size; ++i) {
 		indiv_vec[i] = new gaIndiv_t(i, indiv_vec_length);
 		indiv_vec[i]->initRandom(0);
+
+		int state_ind = rand() % startPool.size();
+		assert(startPool[state_ind] != NULL);
+		indiv_vec[i]->start_state = startPool[state_ind];
+
+		// TODO
+		//indiv_vec[i]->start_state = SelectTournament(startPool);
 	}
 	
 }
@@ -116,23 +251,13 @@ int gaPopulation_t :: gaSelect(gaIndiv_t*& A, gaIndiv_t*& B) {
     
 	uint p1, p2;
 
-//	case GA_ROULETTE:
-//		p1 = SelectRoulette(fitness_set);
-//		p2 = fitness_set.size() + 1;
-//		while ((p2 > fitness_set.size()) || (p1 == p2))
-//		{   p2 = SelectRoulette(fitness_set);   }
-//
-//		A = indiv_vec[p1];
-//		B = indiv_vec[p2];
-		
-//	case GA_TOURNAMENT:
-		p1 = SelectTournament(fitness_set);
-		p2 = fitness_set.size() + 1;
-		while ((p2 > fitness_set.size()) || (p1 == p2))
-		{   p2 = SelectTournament(fitness_set);   }
+	p1 = SelectTournament(fitness_set);
+	p2 = fitness_set.size() + 1;
+	while ((p2 > fitness_set.size()) || (p1 == p2))
+	{   p2 = SelectTournament(fitness_set);   }
 
-		A = indiv_vec[p1];
-		B = indiv_vec[p2];
+	A = indiv_vec[p1];
+	B = indiv_vec[p2];
 	
 	return 1;
 }
@@ -149,13 +274,9 @@ int gaPopulation_t :: gaCrossover( gaIndiv_t* indA, gaIndiv_t* indB,
 	newIndA->input_vec = vecIn_t(indiv_vec_length * CONST_NUM_INPUT_BITS, 'X');
 	newIndB->input_vec = vecIn_t(indiv_vec_length * CONST_NUM_INPUT_BITS, 'X');
 
-//	cout << "Crossover: " << endl
-//		 << "A: " << indA->input_vec << endl
-//		 << "B: " << indB->input_vec << endl
-//		 << "X: ";
+	bool indA_bit = true, indB_bit = false;
 	for (int i = 0; i < indiv_vec_length * CONST_NUM_INPUT_BITS; i++) {
 		bool bit = rand() & 0x01;
-		cout << (uint)bit;
 		if (bit) {
 			newIndA->input_vec[i] = indA->input_vec[i];
 			newIndB->input_vec[i] = indB->input_vec[i];
@@ -165,11 +286,27 @@ int gaPopulation_t :: gaCrossover( gaIndiv_t* indA, gaIndiv_t* indB,
 			newIndA->input_vec[i] = indB->input_vec[i];
 			newIndB->input_vec[i] = indA->input_vec[i];
 		}
+
+		if (i % 2)
+			indA_bit ^= bit;
+		else
+			indB_bit ^= bit;
 	}             
 
-//	cout << endl
-//		 << "1: " << newIndA->input_vec << endl
-//		 << "2: " << newIndB->input_vec << endl;
+	/*	For selecting the start_state, we compute the parity of the bits 
+	   	in the even and odd above and then assign either A or B	*/
+	if (indA_bit)
+		newIndA->start_state = indA->start_state;
+	else
+		newIndA->start_state = indB->start_state;
+
+	if (indB_bit)
+		newIndB->start_state = indB->start_state;
+	else
+		newIndB->start_state = indA->start_state;
+
+	assert(newIndA->start_state != NULL);
+	assert(newIndB->start_state != NULL);
 
 	return 1;
 }
@@ -233,10 +370,10 @@ void gaPopulation_t :: gaEvolve() {
 
 		gaCrossover(p1, p2, c1, c2);
 		assert ((c1 != NULL) && (c2 != NULL));
-		cout << endl 
-			 << size_ 
-			 << ": " << c1->input_vec.length()
-			 << ": " << c2->input_vec.length() << endl;
+//		cout << endl 
+//			 << size_ 
+//			 << ": " << c1->input_vec.length()
+//			 << ": " << c2->input_vec.length() << endl;
 
 		assert(c1->input_vec.length() == (uint)(indiv_vec_length * CONST_NUM_INPUT_BITS));
 		assert(c2->input_vec.length() == (uint)(indiv_vec_length * CONST_NUM_INPUT_BITS));
@@ -250,19 +387,24 @@ void gaPopulation_t :: gaEvolve() {
 			it != new_index_vec.end(); ++it) 
 		indiv_vec[*it] = NULL;
 	new_index_vec.clear();
-
-	for (gaIndiv_vec_iter it = indiv_vec.begin();
+	
+	int num_del = 0;
+	for (gaIndiv_pVec_iter it = indiv_vec.begin();
 			it != indiv_vec.end(); ++it) {
-		if (*it != NULL)
+		if (*it != NULL) {
 			delete *it;
+			num_del++;
+		}
 	}
+	cout << "Deleted " << num_del << " indiv" << endl;
 	indiv_vec.clear();
 
 	indiv_vec = new_indiv_vec;
-	
+	new_indiv_vec.clear();
+
 	assert (indiv_vec.size() == (uint)pop_size);
 	int ind = 0;
-	for (gaIndiv_vec_iter it = indiv_vec.begin(); it != indiv_vec.end(); ++it, ++ind) {
+	for (gaIndiv_pVec_iter it = indiv_vec.begin(); it != indiv_vec.end(); ++it, ++ind) {
 		assert((*it)->input_vec.length() == (uint)(indiv_vec_length * CONST_NUM_INPUT_BITS));
 		(*it)->index = ind;
 	}

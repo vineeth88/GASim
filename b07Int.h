@@ -27,10 +27,10 @@ void SimMultiCycle(Vtop*, int numCycles);
 void SimMultiCycle(Vtop*, vecIn_t&);
 void SimOneCycle(Vtop*, vecIn_t&);
 
-int GetCoverage(Vtop*, bool printCnt=false);					// Get #branches covered
-int GetCoverage(Vtop*, int);			// Get branch counter value[index]
-void GetCoverage(Vtop*, vector<int>&);	// Get all index[branch with coverage > 0]
-int GetBranchCounters(Vtop*, vector<int>&);
+int GetCoverage(const Vtop*, bool printCnt=false);					// Get #branches covered
+int GetCoverage(const Vtop*, int);			// Get branch counter value[index]
+void GetCoverage(const Vtop*, vector<int>&);	// Get all index[branch with coverage > 0]
+int GetBranchCounters(const Vtop*, vector<int>&);
 void GetResetBranch(Vtop*, vector<int>&);	// Get index[reset branch]
 
 void ResetCounters(Vtop*);			// Reset counters
@@ -42,9 +42,9 @@ void printCktState(Vtop*);
 // Functions
 
 inline
-bool IsExcludedBranch(const int i)
+bool IsDefaultBranch(const int i)
 {
-    return (i == 0); // reset branch
+    return ((i == 13) || (i == 18)); // unreachable & default branch
 }
 
 // Circuit Simulation Functions

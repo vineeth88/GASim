@@ -1,4 +1,4 @@
-BENCH = or1200_0
+BENCH = b12
 
 DEFINE_BENCH = -D__${BENCH}
 BENCH_DIR = ./bench/${BENCH}/obj_dir
@@ -68,9 +68,9 @@ SpCoverage.o:
 ${BENCH}Int.o: incl.h ${BENCH}Int.h ${BENCH}Int.cpp vType.h verInclude.h
 	$(CXX) $(CFLAGS) -I. -MMD $(INCLUDE) -DVL_PRINTF=printf -DVM_TRACE=0 -DVM_COVERAGE=0 -DVL_DEBUG=1 -c -o ${BENCH}Int.o ${BENCH}Int.cpp
 
-#newSim.o: newSim.cpp verInclude.h incl.h ${BENCH}Int.h ${BENCH}Int.cpp gaLib.h gaLib.cpp 
-newSim.o: T0330.cpp verInclude.h incl.h ${BENCH}Int.h ${BENCH}Int.cpp gaLib.h gaLib.cpp 
-	$(CXX) $(CFLAGS) $(DEFINE_GEN) -I. -MMD $(INCLUDE) -DVL_PRINTF=printf -DVM_TRACE=0 -DVM_COVERAGE=0 -DVL_DEBUG=1 -c -o newSim.o T0330.cpp
+newSim.o: newSim.cpp verInclude.h incl.h ${BENCH}Int.h ${BENCH}Int.cpp gaLib.h gaLib.cpp 
+#newSim.o: T0330.cpp verInclude.h incl.h ${BENCH}Int.h ${BENCH}Int.cpp gaLib.h gaLib.cpp 
+	$(CXX) $(CFLAGS) $(DEFINE_GEN) -I. -MMD $(INCLUDE) -DVL_PRINTF=printf -DVM_TRACE=0 -DVM_COVERAGE=0 -DVL_DEBUG=1 -c -o newSim.o newSim.cpp
 
 testSim.o: newGASim.cpp verInclude.h incl.h ${BENCH}Int.h ${BENCH}Int.cpp 
 	$(CXX) $(CFLAGS) $(DEFINE_TEST) -I. -MMD $(INCLUDE) -DVL_PRINTF=printf -DVM_TRACE=0 -DVM_COVERAGE=0 -DVL_DEBUG=1 -c -o testSim.o newSim.cpp
