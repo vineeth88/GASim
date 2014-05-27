@@ -13,15 +13,22 @@ state_t::state_t() {
 	hit_count = 0;
 	
 	state_val = string(CONST_NUM_STATE_BITS, '0');
+
+	mem_alloc_cnt++;
 }
 
 state_t::state_t(const state_t& copy_obj) {
 
 	state_index = copy_obj.state_index;
+	state_val = copy_obj.state_val;
+
 	branch_index = copy_obj.branch_index;
 	hit_count = copy_obj.hit_count;
 
-	state_val = copy_obj.state_val;
+	pIndiv = copy_obj.pIndiv;
+	state_fitness = copy_obj.state_fitness;
+
+	mem_alloc_cnt++;
 }
 
 state_t::state_t(const Vtop* copy_obj, int index_) :
@@ -36,6 +43,8 @@ state_t::state_t(const Vtop* copy_obj, int index_) :
 	ss >> state_val;
 
 	GetCoverage(copy_obj, branch_index);
+
+	mem_alloc_cnt++;
 }
 
 state_t::~state_t() {
@@ -44,6 +53,11 @@ state_t::~state_t() {
 
 	state_val = "INVALID STATE";
 	branch_index.clear();
+
+	mem_alloc_cnt--;
+	#ifdef _DBG_DEST_CALL_
+	cout << endl << "Deleted state_t " << mem_alloc_cnt << endl;
+	#endif
 }
 
 state_t& state_t::operator=(const state_t& copy_obj) {   
@@ -127,19 +141,19 @@ void state_t::setCktState(Vtop* top) {
 void set_input(Vtop *top, const vecIn_t& input)
 {
 	assert(input.length() == (uint)CONST_NUM_INPUT_BITS);
-	top->stbi = 0; 
+	top->x_in = 0; 
 	for(uint i = 0; i < 4; ++i) {
-		top->stbi = top->stbi << 1;
+		top->x_in = top->x_in << 1;
 		if (input[i] == '1')
-			top->stbi++;
+			top->x_in++;
 	}
-	top->x_in = input[6] - 48;
+	top->stbi = input[6] - 48;
 }
 
 void RandomVecIn(vecIn_t& vecIn)
 {
 	vecIn = string(CONST_NUM_INPUT_BITS, '0');
-    for (uint i = 0; i < vecIn.size(); i++) 
+    for (uint i = 0; i < vecIn.length(); i++) 
 		vecIn[i] = (rand() & 0x01) + 48;
     assert(vecIn.length() == (uint)CONST_NUM_INPUT_BITS);
 }

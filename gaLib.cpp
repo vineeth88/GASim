@@ -13,6 +13,8 @@ gaIndiv_t::gaIndiv_t (int index_, int vec_length_) :
 	branch_cov = vector<int>(CONST_NUM_BRANCH, 0);
 	branch_cycle = vector<int>(vec_length, 0);
 	max_index = -1, num_branch = 0;
+
+	mem_alloc_cnt++;
 }
 
 gaIndiv_t::gaIndiv_t (int index_, int vec_length_, state_t* start_) :
@@ -27,10 +29,32 @@ gaIndiv_t::gaIndiv_t (int index_, int vec_length_, state_t* start_) :
 	branch_cov = vector<int>(CONST_NUM_BRANCH, 0);
 	branch_cycle = vector<int>(vec_length, 0);
 	max_index = -1, num_branch = 0;
+
+	mem_alloc_cnt++;
+}
+
+gaIndiv_t::gaIndiv_t(const gaIndiv_t& copy_obj) :
+	index(copy_obj.index), 
+	vec_length(copy_obj.vec_length) {
+	
+	input_vec = copy_obj.input_vec;
+
+	start_state = copy_obj.start_state;
+	state_list = state_pVec(copy_obj.state_list);  
+
+	branch_cov = copy_obj.branch_cov; 
+	branch_cycle = copy_obj.branch_cycle;
+	
+	fitness = copy_obj.fitness;
+	max_index = copy_obj.max_index;
+	num_branch = copy_obj.num_branch;
+
+	mem_alloc_cnt++;
 }
 
 gaIndiv_t::~gaIndiv_t() {
 	input_vec.clear();
+	assert((uint)vec_length == state_list.size());
 	for (int i = 0; i < vec_length; ++i) {
 		if (state_list[i]) {
 			delete state_list[i];
@@ -39,6 +63,11 @@ gaIndiv_t::~gaIndiv_t() {
 	}
 	state_list.clear();
 	branch_cov.clear();
+
+	mem_alloc_cnt--;
+	#ifdef _DBG_DEST_CALL_
+	cout << endl << "Deleting gaIndiv_t " << mem_alloc_cnt << endl;
+	#endif
 }
 
 bool gaIndiv_t :: operator<(gaIndiv_t* indiv_) const {
@@ -150,6 +179,8 @@ void gaIndiv_t :: simCkt(Vtop* ckt, int cycle) {
 	state_t *tmp_state = new state_t(ckt, cycle);
 	tmp_state->pIndiv = this;
 
+	if (state_list[cycle])
+		delete state_list[cycle];
 	state_list[cycle] = tmp_state;
 
 	for(vector<int>::iterator it = tmp_state->branch_index.begin();
@@ -331,14 +362,27 @@ void gaPopulation_t :: gaEvolve() {
 	assert (indiv_vec.size() == (uint)pop_size);
 
 	std::sort(indiv_vec.begin(), indiv_vec.end(), compFitness);
+
+//	cout << "Indiv before evolution: " << gaIndiv_t::mem_alloc_cnt << endl;
+	/*	Clearing the state_list of all individuals	*/
+	for (gaIndiv_pVec_iter gt = indiv_vec.begin(); gt != indiv_vec.end(); ++gt) {
+		for (state_pVec_iter st = (*gt)->state_list.begin(); 
+				st != (*gt)->state_list.end(); ++st)
+			if (*st) {
+				delete *st;
+				*st = NULL;
+			}
+	}
 	
 	vector<gaIndiv_t*> new_indiv_vec(pop_size, NULL);
 	vector<int> new_index_vec;
 	int size_= 0;
 
-	// Indiv Fwding 
-	for (int i = 0; i < NUM_INDIV_FWD; ++i) {
-		int ind = rand() % (2 * NUM_INDIV_FWD);
+	/*	Indiv Fwding */
+
+	for (int i = 0; size_ < NUM_INDIV_FWD; ++i) {
+	//for (int i = 0; i < NUM_INDIV_FWD; ++i) {
+		int ind = rand() % (4 * NUM_INDIV_FWD);
 		bool twinFlag = false;
 		for (uint j = 0; j < new_indiv_vec.size(); ++j)
 			if (new_indiv_vec[j] == indiv_vec[ind]) {
@@ -388,6 +432,8 @@ void gaPopulation_t :: gaEvolve() {
 		indiv_vec[*it] = NULL;
 	new_index_vec.clear();
 	
+//	cout << "Indiv after evolution: " << gaIndiv_t::mem_alloc_cnt << endl;
+
 	int num_del = 0;
 	for (gaIndiv_pVec_iter it = indiv_vec.begin();
 			it != indiv_vec.end(); ++it) {
@@ -396,8 +442,10 @@ void gaPopulation_t :: gaEvolve() {
 			num_del++;
 		}
 	}
-	cout << "Deleted " << num_del << " indiv" << endl;
+//	cout << "Deleted " << num_del << " indiv" << endl;
 	indiv_vec.clear();
+
+//	cout << "Indiv after deletion: " << gaIndiv_t::mem_alloc_cnt << endl;
 
 	indiv_vec = new_indiv_vec;
 	new_indiv_vec.clear();

@@ -29,7 +29,9 @@ class gaIndiv_t {
 	//Constructors
 	gaIndiv_t(int index_, int length_);
 	gaIndiv_t(int index_, int length_, state_t*);
-	
+	/*	Copy constructor */
+	gaIndiv_t(const gaIndiv_t&);	
+
 	//Destructors
 	~gaIndiv_t();
 
@@ -43,6 +45,8 @@ class gaIndiv_t {
 	void initRandom(int);
 	void seedIndiv(gaIndiv_t*, int, int);
 	void printIndiv(bool state_ = false);
+
+	static int mem_alloc_cnt;
 };
 
 class gaPopulation_t {
@@ -66,6 +70,7 @@ class gaPopulation_t {
 	void gaMutate();
 	void gaEvolve();
 
+	static int mem_alloc_cnt;
 };
 
 int SelectTournament(const vector<fitness_t>&);

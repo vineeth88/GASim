@@ -109,6 +109,8 @@ class state_t {
 	void setCktState(Vtop*);				// Set state as curr state
 	void printState(bool full_=false);	// Print (full/control) state
 	keyVal_t getHash();
+
+	static int mem_alloc_cnt;
 };
 
 class gVarClass {

@@ -14,15 +14,22 @@ state_t::state_t() {
 	hit_count = 0;
 	
 	state_val = string(CONST_NUM_STATE_BITS, '0');
+
+	mem_alloc_cnt++;
 }
 
 state_t::state_t(const state_t& copy_obj) {
 
 	state_index = copy_obj.state_index;
+	state_val = copy_obj.state_val;
+
 	branch_index = copy_obj.branch_index;
 	hit_count = copy_obj.hit_count;
 
-	state_val = copy_obj.state_val;
+	pIndiv = copy_obj.pIndiv;
+	state_fitness = copy_obj.state_fitness;
+
+	mem_alloc_cnt++;
 }
 
 state_t::state_t(const Vtop* copy_obj, int state_index_) :
@@ -40,6 +47,8 @@ state_t::state_t(const Vtop* copy_obj, int state_index_) :
 	ss >> state_val;
 
 	GetCoverage(copy_obj, branch_index);
+
+	mem_alloc_cnt++;
 }
 
 state_t::~state_t() {
@@ -48,6 +57,11 @@ state_t::~state_t() {
 
 	state_val = "INVALID STATE";
 	branch_index.clear();
+
+	mem_alloc_cnt--;
+	#ifdef _DBG_DEST_CALL_
+	cout << endl << "Deleted state_t " << mem_alloc_cnt << endl;
+	#endif
 }
 
 state_t& state_t::operator=(const state_t& copy_obj) {   
@@ -101,12 +115,13 @@ void state_t::printState (bool full_) {
 		 << state_val.substr(11,8)<< " "
 		 << state_val.substr(19,8)<< " " 
 		 << state_val.substr(27,8)<< " "
-		 << state_val.substr(35,8)<< " ";
-	if (full_)
-	for (int i = 43; i < 128+43; i += 8)
-		cout << state_val.substr(i,8) << " ";
-	cout << endl;
-
+		 << state_val.substr(35,8)<< " "
+	 	 << endl;
+	if (full_) {
+		for (int i = 43; i < 120+43; i += 8)
+			cout << state_val.substr(i,8) << "-";
+		cout << state_val.substr(120+43,8) << endl;
+	}
 }
 
 void state_t::setCktState(Vtop* top) {
