@@ -100,7 +100,11 @@ string state_t::operator[] (int index_) {
 }
 
 void state_t::printState (bool full_) {
-    cout << state_val << endl;
+	cout << state_val << endl;
+	for (vector<int>::iterator it = branch_index.begin();
+			it != branch_index.end(); ++it)
+		cout << *it << " ";
+	cout << endl;
 }
 
 void state_t::setCktState(Vtop* top) {

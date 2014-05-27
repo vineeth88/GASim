@@ -84,6 +84,12 @@ struct brGraph_t {
 	int_vec branchType;
 	// 0 - None, 1 - Edge, 2 - Node, 3 - Both
 
+	brGraph_t() {
+		nodeMap = int_vec(CONST_NUM_BRANCH, -1);
+		edgeMap = int_vec(CONST_NUM_BRANCH, -1);
+		branchType = int_vec(CONST_NUM_BRANCH, 0);
+	}
+
 	int addEdge(int index_, int start_, int end_) {
 		assert(index_ < CONST_NUM_BRANCH);
 //		if (//(branchType[index_] & 0x01) && 
@@ -110,11 +116,21 @@ struct brGraph_t {
 		}
 		return nodeMap[index_];
 	}
+
+	bEdge_t* getEdge(int index_) {
+		int val = edgeMap[index_];
+		if (val == -1)
+			return NULL;
 		
-	brGraph_t() {
-		nodeMap = int_vec(CONST_NUM_BRANCH, -1);
-		edgeMap = int_vec(CONST_NUM_BRANCH, -1);
-		branchType = int_vec(CONST_NUM_BRANCH, 0);
+		return &bEdges[val];
+	}
+
+	bNode_t* getNode(int index_) {
+		int val = nodeMap[index_];
+		if (val == -1)
+			return NULL;
+		
+		return &bNodes[val];
 	}
 
 	void printGraph() {
@@ -237,6 +253,7 @@ void readParam(Stage2_Param*);
 
 void readTopNodes(graph&, brGraph_t&);
 void getTarget(Stage2_Param*, int, set<int>&);
+int getPathBFS(brGraph_t*, int, int, string&);
 
 void readBranchGraph(brGraph_t&);
 void Stage2_GenerateVectors(Stage2_Param*);
@@ -251,7 +268,7 @@ bool compCoverage(gaIndiv_t*, gaIndiv_t*);
 
 int main(int argc, char* argv[]) {
 
-#define random_seed
+//#define random_seed
 #ifdef random_seed
     uint seed = time(NULL);
     cout << seed << endl;
@@ -287,6 +304,7 @@ int main(int argc, char* argv[]) {
 	readParam(paramObj1);
 	
 	Stage1_GenerateVectors(paramObj1);
+	PrintVectorSet(paramObj1->inputVec);
 
 	cout << "Uncovered Branches: " << endl;
 	int num_branch_uncovered = 0;
@@ -313,10 +331,8 @@ int main(int argc, char* argv[]) {
 		return 0;
 	#endif
 	
-	PrintVectorSet(paramObj1->inputVec);
-
-
-	cout << "Memory allocation details: " << endl
+	cout << endl
+		 << "Memory allocation details: " << endl
 		 << "gaIndiv_t: " << gaIndiv_t::mem_alloc_cnt << endl
 		 << "state_t: " << state_t::mem_alloc_cnt << endl;
 
@@ -334,15 +350,81 @@ int main(int argc, char* argv[]) {
 	paramObj2->branchGraph = &branchGraph;
 	paramObj2->startState = paramObj1->stateList.back();
 	
-	cout << "First set of leaf branches: ";
-	printVec(paramObj2->startState->branch_index);
-	cout << endl;
+//	cout << "States reached in Stage 1" << endl;
+//	for (int ind = 0; (uint)ind < paramObj1->stateList.size(); ++ind) {
+//		cout << paramObj1->inputVec.substr(ind*CONST_NUM_INPUT_BITS, CONST_NUM_INPUT_BITS) 
+//			 << endl;
+//		paramObj1->stateList[ind]->printState();
+//		cout << "--" << endl;
+//	}
+
+	cout << "Last state reached at the end of Stage 1" << endl;
+	paramObj2->startState->printState();
 	
+//	vector<int> unCovered;
+//	for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
+//		if(IsDefaultBranch(ind))
+//			paramObj1->branchHit[ind] = -5;
+//
+//		if (paramObj1->branchHit[ind] == 0) {
+//			if (leafBranch[ind]) {
+//				bEdge_t* edge = branchGraph.getEdge(ind);
+//				unCovered.push_back(edge->startTop);
+//			}
+//		}
+//	}
+
+	set<int> unCovered;
+	for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
+		if(IsDefaultBranch(ind))
+			paramObj1->branchHit[ind] = -5;
+
+		if (paramObj1->branchHit[ind] == 0) {
+			if (leafBranch[ind]) {
+				bEdge_t* edge = branchGraph.getEdge(ind);
+				if (edge)
+					unCovered.insert(edge->startTop);
+			}
+		}
+	}
+
+	cout << "Edges: " << endl;
 	for (int_vec_iter br = paramObj2->startState->branch_index.begin();
 			br != paramObj2->startState->branch_index.end(); ++br) {
-		if (leafBranch[*br])
+		if (leafBranch[*br]) {
 			paramObj2->branchLeaf.push_back(*br);
+			cout << *br << " ";
+			
+			bEdge_t * cur_edge = branchGraph.getEdge(*br);
+			if(cur_edge) {
+				int start_val = cur_edge->startTop;
+				int end_val = cur_edge->endTop;
+				cout << "(" << start_val << "-" << end_val << ")" << endl;
+
+				bNode_t * end_node = branchGraph.getNode(end_val);
+				assert(end_node);
+				cout << "Edges (" << end_val << "): ";
+				printVec((*end_node).outEdges);
+				cout << endl;
+				cout << "Nodes (" << end_val << "): ";
+				printVec((*end_node).outNodes);
+				cout << endl;
+
+				//for (int_vec_iter it = unCovered.begin(); it != unCovered.end(); ++it) {
+				for (set<int>::iterator it = unCovered.begin(); it != unCovered.end(); ++it) {
+					string path;
+					int lvl = getPathBFS(&branchGraph, end_val, *it, path);
+					cout << *it << ": " << path << endl;
+				}
+			}
+			else
+				cout << "-";
+			cout << endl;
+		}
+			
 	}
+
+	exit(0);
 
 	readParam(paramObj2);
 	for (int i = 0; i < 100; i++) {
@@ -357,93 +439,6 @@ int main(int argc, char* argv[]) {
 //	#endif 
 
 	return 0;
-}
-
-void readTopNodes(graph& graphCov, brGraph_t& branchGraph) {
-
-	int_vec leafNodes;
-	int_vec topNodes;
-	for (int i = 1; (unsigned) i <= graphCov.numNodes; ++i) {
-		if ((graphCov.gNodes[i]).branch_index == -1)
-			continue;
-
-		int branch_ = (graphCov.gNodes[i]).branch_index;
-		int parent_ = graphCov.getTopNode(branch_);
-
-		if(IsDefaultBranch(branch_))
-			continue;
-
-		if (branch_ == parent_)
-			topNodes.push_back(parent_);
-
-		if (graphCov.gNodes[i].num_child == 0) {
-			leafNodes.push_back(branch_);
-			leafBranch[branch_] = 1;
-		}
-	}
-
-	cout << "Leaf nodes : "; 
-	printVec(leafNodes);
-	cout << endl;
-
-	cout << "Top nodes : "; 
-	printVec(topNodes);
-	cout << endl;
-	
-	for (int_vec_iter it = leafNodes.begin(); 
-			it != leafNodes.end(); ++it)
-		branchGraph.branchType[*it]++;
-
-	for (int_vec_iter it = topNodes.begin(); 
-			it != topNodes.end(); ++it)
-		branchGraph.branchType[*it] += 2;
-
-	char fName[100];
-	sprintf(fName, "%s.bg", benchCkt);
-	
-	ifstream brFile;
-	brFile.open(fName, ios::in);
-	if (brFile == NULL) {
-		cout << "Unable to open file " << fName << endl;
-		return;
-	}
-	
-	for (int lNum = 0; brFile && (uint) lNum < topNodes.size(); ++lNum) {
-		string tmpStr;
-		getline(brFile, tmpStr);
-		cout << tmpStr << " l:" << tmpStr.length() << endl;
-
-		stringstream ss;
-		ss << tmpStr;
-
-		int node_index;
-		ss >> node_index;
-
-		int num;
-		ss >> num;
-
-		int_vec edge_vec;
-		while (ss) {
-			edge_vec.push_back(num);
-
-			int topNode = graphCov.getTopNode(num);
-
-			cout << branchGraph.addNode(node_index) << " ";
-			cout << branchGraph.addNode(topNode) << " ";
-			cout << branchGraph.addEdge(num, topNode, node_index) << " ";
-
-			cout << topNode << "--" << num << "-->" << node_index << endl;
-
-			ss >> num;
-		}
-
-		cout << endl;
-	}
-	
-	brFile.close();
-	branchGraph.printGraph();
-
-    return;
 }
 
 void Stage2_GenerateVectors(Stage2_Param* paramObj) {
@@ -673,6 +668,63 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 
 }
 
+int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
+	
+	cout << "Finding path from " << start << " -> " << target << endl;
+	map<int, string> label;
+	map<int, int> level;
+	int max_level = -1;
+
+	vector<int> bfsQueue;
+	bfsQueue.push_back(start);
+	level.insert(make_pair(start, 0));
+	label.insert(make_pair(start, ""));
+
+	const int THRESH_LEVEL = 10;
+	for (int qInd = 0; qInd < bfsQueue.size(); ++qInd) {
+
+		int front = bfsQueue[qInd];
+		bNode_t* curr = brGraph->getNode(front);
+
+//		cout << "F: " << front << endl;
+		for (int eInd = 0; eInd < curr->outNodes.size(); ++eInd) {
+			int node_ = curr->outNodes[eInd];
+			
+			char ch[2];
+			ch[0] = eInd + 48; ch[1] = '\0';
+			string tmpLabel = label[front] + string(ch);
+			label.insert(make_pair(node_, tmpLabel));
+
+			int tmpLevel = level[front] + 1;
+			level.insert(make_pair(node_, tmpLevel));
+
+			if (node_ == target) {
+				path = tmpLabel;
+				return tmpLevel;
+			}
+
+			if (max_level < tmpLevel)
+				max_level = tmpLevel;
+
+			bfsQueue.push_back(node_);
+
+//			cout << "Queued " << node_ 
+//				 << " Level: " << tmpLevel
+//				 << " Label: " << tmpLabel
+//				 << " Max_Lvl: " << max_level << endl;
+		}
+
+		if (max_level > THRESH_LEVEL) {
+			path = "Unreachable";
+			return -1;
+		}
+
+	}
+
+}
+
+
+
 //void getTarget(Stage2_Param* paramObj, int currEdge, vector<int>& favorSet, vector) {
 void getTarget(Stage2_Param* paramObj, int currEdge, set<int>& favorSet) {
 	
@@ -708,6 +760,96 @@ void getTarget(Stage2_Param* paramObj, int currEdge, set<int>& favorSet) {
 //				favorSet.push_back(br);
 		}
 	}
+}
+
+void readTopNodes(graph& graphCov, brGraph_t& branchGraph) {
+
+	int_vec leafNodes;
+	int_vec topNodes;
+	for (int i = 1; (unsigned) i <= graphCov.numNodes; ++i) {
+		if ((graphCov.gNodes[i]).branch_index == -1)
+			continue;
+
+		int branch_ = (graphCov.gNodes[i]).branch_index;
+		int parent_ = graphCov.getTopNode(branch_);
+
+		if(IsDefaultBranch(branch_))
+			continue;
+
+		if (branch_ == parent_)
+			topNodes.push_back(parent_);
+
+		if (graphCov.gNodes[i].num_child == 0) {
+			leafNodes.push_back(branch_);
+			leafBranch[branch_] = 1;
+		}
+	}
+
+	cout << "Leaf nodes : "; 
+	printVec(leafNodes);
+	cout << endl;
+
+	cout << "Top nodes : "; 
+	printVec(topNodes);
+	cout << endl;
+	
+	for (int_vec_iter it = leafNodes.begin(); 
+			it != leafNodes.end(); ++it)
+		branchGraph.branchType[*it]++;
+
+	for (int_vec_iter it = topNodes.begin(); 
+			it != topNodes.end(); ++it)
+		branchGraph.branchType[*it] += 2;
+
+	char fName[100];
+	sprintf(fName, "%s.bg", benchCkt);
+	
+	ifstream brFile;
+	brFile.open(fName, ios::in);
+	if (brFile == NULL) {
+		cout << "Unable to open file " << fName << endl;
+		return;
+	}
+	
+	for (int lNum = 0; brFile && (uint) lNum < topNodes.size(); ++lNum) {
+		string tmpStr;
+		getline(brFile, tmpStr);
+//		cout << tmpStr << " l:" << tmpStr.length() << endl;
+
+		stringstream ss;
+		ss << tmpStr;
+
+		int node_index;
+		ss >> node_index;
+
+		int num;
+		ss >> num;
+
+		int_vec edge_vec;
+		while (ss) {
+			edge_vec.push_back(num);
+
+			int topNode = graphCov.getTopNode(num);
+
+			branchGraph.addNode(node_index);
+			branchGraph.addNode(topNode);
+			branchGraph.addEdge(num, topNode, node_index);
+
+//			cout << branchGraph.addNode(node_index) << " ";
+//			cout << branchGraph.addNode(topNode) << " ";
+//			cout << branchGraph.addEdge(num, topNode, node_index) << " ";
+//			cout << topNode << "--" << num << "-->" << node_index << endl;
+
+			ss >> num;
+		}
+
+//		cout << endl;
+	}
+	
+	brFile.close();
+//	branchGraph.printGraph();
+
+    return;
 }
 
 void Stage1_GenerateVectors(Stage1_Param* paramObj) {

@@ -155,11 +155,11 @@ void state_t::printState (bool full_) {
 			 << state_val.substr(93,5) 	<< " "  // scan
 			 << state_val.substr(98,5) 	<< " "  // max
 			 << state_val.substr(109,6)	<< endl;   // count2
-		for (vector<int>::iterator it = branch_index.begin();
-				it != branch_index.end(); ++it)
-			cout << *it << " ";
-		cout << endl;
 	}
+	for (vector<int>::iterator it = branch_index.begin();
+			it != branch_index.end(); ++it)
+		cout << *it << " ";
+	cout << endl;
 }
 
 void state_t::setCktState(Vtop* top) {
