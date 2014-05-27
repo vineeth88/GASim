@@ -363,7 +363,7 @@ void gaPopulation_t :: gaEvolve() {
 
 	std::sort(indiv_vec.begin(), indiv_vec.end(), compFitness);
 
-	cout << "Indiv before evolution: " << gaIndiv_t::mem_alloc_cnt << endl;
+//	cout << "Indiv before evolution: " << gaIndiv_t::mem_alloc_cnt << endl;
 	/*	Clearing the state_list of all individuals	*/
 	for (gaIndiv_pVec_iter gt = indiv_vec.begin(); gt != indiv_vec.end(); ++gt) {
 		for (state_pVec_iter st = (*gt)->state_list.begin(); 
@@ -432,7 +432,7 @@ void gaPopulation_t :: gaEvolve() {
 		indiv_vec[*it] = NULL;
 	new_index_vec.clear();
 	
-	cout << "Indiv after evolution: " << gaIndiv_t::mem_alloc_cnt << endl;
+//	cout << "Indiv after evolution: " << gaIndiv_t::mem_alloc_cnt << endl;
 
 	int num_del = 0;
 	for (gaIndiv_pVec_iter it = indiv_vec.begin();
@@ -442,10 +442,10 @@ void gaPopulation_t :: gaEvolve() {
 			num_del++;
 		}
 	}
-	cout << "Deleted " << num_del << " indiv" << endl;
+//	cout << "Deleted " << num_del << " indiv" << endl;
 	indiv_vec.clear();
 
-	cout << "Indiv after deletion: " << gaIndiv_t::mem_alloc_cnt << endl;
+//	cout << "Indiv after deletion: " << gaIndiv_t::mem_alloc_cnt << endl;
 
 	indiv_vec = new_indiv_vec;
 	new_indiv_vec.clear();

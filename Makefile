@@ -12,8 +12,8 @@ VERILATOR_INCLUDE = /usr/local/share/verilator/include
 
 INCLUDE = -I$(SYSTEMPERL) -I$(VERILATOR_INCLUDE)
 
-#DEBUG = -g
-DEBUG = -g -D_DBG_DEST_CALL_
+DEBUG = -g
+#DEBUG = -g -D_DBG_DEST_CALL_
 CFLAGS += ${DEBUG}
 
 all: gen
@@ -29,13 +29,14 @@ verilated.o SpCoverage.o
 TARGET_GEN = ${BENCH}Sim
 DEFINE_GEN = -D_FuncMode_
 
-test: $(OBJS_MAIN)
+test: $(OBJS_TEST)
 	$(CXX) $(OBJS_TEST) $(INCLUDE) $(LIBS) -o $(TARGET_MAIN) -lm -lstdc++ 2>&1 | c++filt
 
 gen: $(OBJS_GEN)
 	$(CXX) $(OBJS_GEN) $(INCLUDE) $(LIBS) -o $(TARGET_GEN) -lm -lstdc++ 2>&1 | c++filt
 
 # All object files below
+
 main.o:	vType.h incl.h ${BENCH}Int.h main.cpp
 	$(CXX) $(CFLAGS) -I. -MMD $(INCLUDE) -DVL_PRINTF=printf -DVM_TRACE=0 -DVM_COVERAGE=0 -DVL_DEBUG=1 -c -o main.o main.cpp
 

@@ -20,10 +20,10 @@ state_t::state_t() {
 state_t::state_t(const state_t& copy_obj) {
 
 	state_index = copy_obj.state_index;
+	state_val = copy_obj.state_val;
+
 	branch_index = copy_obj.branch_index;
 	hit_count = copy_obj.hit_count;
-
-	state_val = copy_obj.state_val;
 
 	pIndiv = copy_obj.pIndiv;
 	state_fitness = copy_obj.state_fitness;

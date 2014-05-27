@@ -246,7 +246,7 @@ void DisplayMap(stateMap_t&);
 void printVec(int_vec&);
 void printSet(set<int>&);
 void printCnt(int_vec&);
-void PrintVectorSet(const vecIn_t& inputVec);
+void PrintVectorSet(const vecIn_t& inputVec, bool printFlag = false);
 bool compCoverage(gaIndiv_t*, gaIndiv_t*);
 
 int main(int argc, char* argv[]) {
@@ -301,27 +301,26 @@ int main(int argc, char* argv[]) {
 	}
 	cout << endl << "% Coverage " << (float) (CONST_NUM_BRANCH - num_branch_uncovered) * 100.0f / (float) (CONST_NUM_BRANCH) << endl;
 
-//	PrintVectorSet(paramObj1->inputVec);
-//	if (num_branch_uncovered == 0) {
-//		delete paramObj1;
-//		return 0;
-//	}
+	if (num_branch_uncovered == 0) {
+		PrintVectorSet(paramObj1->inputVec, true);
+		delete paramObj1;
+		return 0;
+	}
+	
+	#if defined(__b10)
+		PrintVectorSet(paramObj1->inputVec, true);
+		delete paramObj1;
+		return 0;
+	#endif
+	
+	PrintVectorSet(paramObj1->inputVec);
+
 
 	cout << "Memory allocation details: " << endl
 		 << "gaIndiv_t: " << gaIndiv_t::mem_alloc_cnt << endl
 		 << "state_t: " << state_t::mem_alloc_cnt << endl;
 
-	for (state_pVec_iter st = paramObj1->stateList.begin(); 
-			st != paramObj1->stateList.end(); ++st) {
-		(*st)->printState(1);
-		delete *st;
-		*st = NULL;
-		cout << endl;
-	}
-	delete paramObj1;	
-	exit(0);
-
-//	#if defined(__b11) || defined(__b12)
+//	delete paramObj1;	
 
 	graph covGraph;
 	brGraph_t branchGraph;
@@ -333,6 +332,7 @@ int main(int argc, char* argv[]) {
 	Stage2_Param *paramObj2 = new Stage2_Param(paramObj1);;
 	paramObj2->inputVec = paramObj1->inputVec;
 	paramObj2->branchGraph = &branchGraph;
+	paramObj2->startState = paramObj1->stateList.back();
 	
 	cout << "First set of leaf branches: ";
 	printVec(paramObj2->startState->branch_index);
@@ -758,8 +758,8 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 	bool gaTerminate = false;
 	for (int gen = 0; !gaTerminate && (gen < NUM_GEN); ++gen) {
 		
-		cout << "States allocated: " << state_t::mem_alloc_cnt << endl;
-		cout << "Indiv allocated: " << gaIndiv_t::mem_alloc_cnt << endl;
+//		cout << "States allocated: " << state_t::mem_alloc_cnt << endl;
+//		cout << "Indiv allocated: " << gaIndiv_t::mem_alloc_cnt << endl;
 
 		cout << "GEN " << gen << endl << endl;
 		int_vec currBranchCov(CONST_NUM_BRANCH, 0);
@@ -896,8 +896,8 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 		
 	/* Mine for interesting individuals and states 	*/
 	cout << "States reached after Round 0" << endl;
-	DisplayMap(currStateMap);
-	cout << endl;
+//	DisplayMap(currStateMap);
+//	cout << endl;
 
 	cout << "States allocated: " << state_t::mem_alloc_cnt << endl;
 
@@ -1169,28 +1169,37 @@ void printCnt(int_vec& vec_) {
 	cout << endl;
 }
 
-void PrintVectorSet(const vecIn_t& inputVec ) {
-
-	char fName[100];
-	sprintf(fName, "%s_%d.vec", benchCkt, (int)time(NULL) % 10000);
+void PrintVectorSet(const vecIn_t& inputVec, bool printFlag ) {
 
 	ofstream vecOut;
-	vecOut.open(fName, ios::out);
-	
+	char fName[100];
+
+	if (printFlag) {
+		sprintf(fName, "%s_%d.vec", benchCkt, (int)time(NULL) % 10000);
+		
+		cout << "Writing vectors into file -> " << fName << endl; 
+		vecOut.open(fName, ios::out);
+		
+		vecOut << CONST_NUM_INPUT_BITS << endl;
+	}
+		
 	cout << endl << "# Vectors: " << inputVec.length()/CONST_NUM_INPUT_BITS << endl;
-	vecOut << CONST_NUM_INPUT_BITS << endl;
 
 	for (uint i = 0; i < inputVec.length(); i++) {
 		cout << inputVec[i];
-		vecOut << inputVec[i];
+		if(printFlag)
+			vecOut << inputVec[i];
 		if ((i+1) % CONST_NUM_INPUT_BITS == 0) {
 			cout << endl;
-			vecOut << endl;
+			if(printFlag)
+				vecOut << endl;
 		}
 	}
 	
-	vecOut << "END" << endl;
-	vecOut.close();
+	if(printFlag) {
+		vecOut << "END" << endl;
+		vecOut.close();
+	}
 }
 
 bool compCoverage(gaIndiv_t* A, gaIndiv_t* B) {
