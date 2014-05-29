@@ -383,7 +383,7 @@ int main(int argc, char* argv[]) {
 	set<int> &unCovered = paramObj2->unCovered;
 	
 	int MAX_ROUNDS = 10;
-//	for (int num_round = 0; num_round < MAX_ROUNDS; ++num_round) {
+	for (int num_round = 0; num_round < MAX_ROUNDS; ++num_round) {
 	
 	unCovered.clear();
 	for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
@@ -392,13 +392,16 @@ int main(int argc, char* argv[]) {
 		else if ((branchHit[ind] == 0) && (IsBranchLeaf[ind])) {
 			bEdge_t* edge = branchGraph.getEdge(ind);
 			if (edge) {
-				unCovered.insert(edge->startTop);
+//				unCovered.insert(edge->startTop);
+				unCovered.insert(ind);
+				/* TODO!! - 05/30	*/
+				favorSet.insert(ind);
 			}
 		}
 	}
 	
-//	if (unCovered.size() == 0)
-//		break;
+	if (unCovered.size() == 0)
+		break;
 
 	/*	edgeVec = The list of edges traversed in the last cycle	*/
 	int_vec edgeVec;
@@ -429,6 +432,7 @@ int main(int argc, char* argv[]) {
 	for (set<int>::iterator it = unCovered.begin(); it != unCovered.end(); ++it) {
 		string path;
 		int lvl = getPathBFS(&branchGraph, end_val, *it, path);
+		cout << *it << ": " << path << endl;
 		if ((target_lvl > lvl) && (path.compare("Unreachable"))) {
 			target_lvl = lvl;
 			target_node = *it;
@@ -451,15 +455,19 @@ int main(int argc, char* argv[]) {
 			int brInd = target_path[st] - 48;
 			int tar_edge = iter_node->outEdges[brInd];
 			favorSet.insert(tar_edge);
+			cout << "favorSet <- " << tar_edge << endl;
 			int self_loop_br = -1;
-			for (int_vec_iter br = iter_node->outNodes.begin(); 
-					br != iter_node->outNodes.end(); ++br) {
-				if (*br == iter_val) {
-					favorSet.insert(*br);
-					self_loop_br = *br;
+			for (int br = 0 ; br < iter_node->outNodes.size(); ++br) {
+				if (iter_node->outNodes[br] == iter_val) {
+					favorSet.insert(iter_node->outEdges[br]);
+					favorSet.insert(iter_val);
+					self_loop_br = iter_node->outEdges[br];
+					cout << "favorSet <- " << self_loop_br << endl;
 				}
 			}
 
+			if (self_loop_br != -1)
+				cout << "Self-loop: " << self_loop_br << endl;
 			/* Run stage 2	*/
 			paramObj2->tar_edge = tar_edge;
 			paramObj2->tar_node = iter_val;
@@ -468,9 +476,11 @@ int main(int argc, char* argv[]) {
 			bool branch_hit = paramObj2->lastBranchHit[tar_edge];
 			if (!branch_hit) {
 				if(self_loop_br != -1) {
-					favorSet.insert(self_loop_br);
 					while (!branch_hit) {
 						/*	Run stage 2	*/
+						favorSet.insert(self_loop_br);
+						favorSet.insert(iter_val);
+						cout << "favorSet <- " << self_loop_br << endl;
 						Stage2_GenerateVectors(paramObj2);
 						branch_hit = paramObj2->lastBranchHit[tar_edge];
 					}
@@ -577,8 +587,8 @@ int main(int argc, char* argv[]) {
 //		cout << "No reachable path. Simulating vector for next state." << endl;
 //	}
 
-//	getchar();
-//	}
+	getchar();
+	}
 	exit(0);
 	PrintVectorSet(paramObj2->inputVec);
 
@@ -796,7 +806,13 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 			int tmpLevel = level[front] + 1;
 			level.insert(make_pair(node_, tmpLevel));
 
-			if (node_ == target) {
+//			if (node_ == target) {
+//				path = tmpLabel;
+//				return tmpLevel;
+//			} 
+
+			int edge_ = curr->outEdges[eInd];
+			if (edge_ == target) {
 				path = tmpLabel;
 				return tmpLevel;
 			}
