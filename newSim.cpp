@@ -361,8 +361,11 @@ int main(int argc, char* argv[]) {
 	readGraph(covGraph);
 	readTopNodes(covGraph, branchGraph);
 	
+	string tmpPath;
+	getPathBFS(&branchGraph, 82, 40, tmpPath);
 	vecIn_t TestVectorSet = paramObj1->inputVec;
 
+	exit(0);
 	cout << "Stage 2 " << endl << endl;
 	Stage2_Param *paramObj2 = new Stage2_Param(paramObj1);
 	paramObj2->inputVec = "";// paramObj1->inputVec;
@@ -382,10 +385,11 @@ int main(int argc, char* argv[]) {
 	set<int> &favorSet = paramObj2->favorSet;
 	set<int> &unCovered = paramObj2->unCovered;
 	
-	int MAX_ROUNDS = 10;
+	int MAX_ROUNDS = 20;
 	for (int num_round = 0; num_round < MAX_ROUNDS; ++num_round) {
 	
 	unCovered.clear();
+	favorSet.clear();
 	for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
 		if(IsDefaultBranch(ind))
 			branchHit[ind] = -5;
@@ -395,7 +399,7 @@ int main(int argc, char* argv[]) {
 //				unCovered.insert(edge->startTop);
 				unCovered.insert(ind);
 				/* TODO!! - 05/30	*/
-				favorSet.insert(ind);
+			//	favorSet.insert(ind);
 			}
 		}
 	}
@@ -458,8 +462,9 @@ int main(int argc, char* argv[]) {
 			cout << "favorSet <- " << tar_edge << endl;
 			int self_loop_br = -1;
 			for (int br = 0 ; br < iter_node->outNodes.size(); ++br) {
+				favorSet.insert(iter_node->outEdges[br]);
 				if (iter_node->outNodes[br] == iter_val) {
-					favorSet.insert(iter_node->outEdges[br]);
+			//		favorSet.insert(iter_node->outEdges[br]);
 					favorSet.insert(iter_val);
 					self_loop_br = iter_node->outEdges[br];
 					cout << "favorSet <- " << self_loop_br << endl;
@@ -473,7 +478,13 @@ int main(int argc, char* argv[]) {
 			paramObj2->tar_node = iter_val;
 
 			Stage2_GenerateVectors(paramObj2);
-			bool branch_hit = paramObj2->lastBranchHit[tar_edge];
+			bool branch_hit = false;
+			for (int br = 0; br < iter_node->outEdges.size(); ++br) {
+				int tmp_edge = iter_node->outEdges[br];
+				if ((paramObj2->lastBranchHit[tmp_edge]) && 
+					(iter_node->outNodes[br] != iter_val))
+						branch_hit = true;
+			}
 			if (!branch_hit) {
 				if(self_loop_br != -1) {
 					while (!branch_hit) {
@@ -482,7 +493,12 @@ int main(int argc, char* argv[]) {
 						favorSet.insert(iter_val);
 						cout << "favorSet <- " << self_loop_br << endl;
 						Stage2_GenerateVectors(paramObj2);
-						branch_hit = paramObj2->lastBranchHit[tar_edge];
+						for (int br = 0; br < iter_node->outEdges.size(); ++br) {
+							int tmp_edge = iter_node->outEdges[br];
+							if ((paramObj2->lastBranchHit[tmp_edge]) && 
+								(iter_node->outNodes[br] != iter_val))
+									branch_hit = true;
+						}
 					}
 				}
 				else {
@@ -694,11 +710,20 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 						if (*br == tar_edge) {
 							state_fit += CONST_TARGET_BRANCH;
 							branch_p = true;
-							branch_val = true;
+							branch_val = *br;
 						}
 					}
 					else 
 						state_fit += CONST_UNIMPT_BRANCH;
+
+					bNode_t* iter_node = branchGraph->getNode(tar_node);
+					for (int bt = 0; (uint) bt < iter_node->outEdges.size(); ++bt) { 
+						if ((iter_node->outEdges[bt] == *br) && 
+							(iter_node->outNodes[bt] != tar_node)) {
+							branch_p = true;
+							branch_val = *br;
+						}
+					}
 					if (branch_p) {
 						cout << "Branch " << branch_val << " reached in " << ind + 1 << " vectors" << endl;
 						gaTerminate = true;
@@ -787,7 +812,7 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 	level.insert(make_pair(start, 0));
 	label.insert(make_pair(start, ""));
 
-	const int THRESH_LEVEL = 10;
+	const int THRESH_LEVEL = 5;
 	for (int qInd = 0; (uint) qInd < bfsQueue.size(); ++qInd) {
 
 		int front = bfsQueue[qInd];
