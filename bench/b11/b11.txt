@@ -1,0 +1,28 @@
+Cov: 	20
+Cond:	cont1 > 63
+Top: 	22
+
+16 --15--> 22
+
+Cov: 	15
+Mod:	cont1 = r_in - cont1;
+Cond:	r_in[1] = 1
+Top:	16
+
+Since r_in = reg[5:0], it can take values from (63 downto 0)
+Therefore, cont1 must be -ve before reaching 15
+
+13 --11,12--> 16
+
+Cov:	11
+Mod:	cont1 = cont * 2
+Cond:	r_in[0] = 1
+
+Cov:	12
+Mod:	cont1 = cont
+Cond:	r_in[0] = 0
+
+Since cont = reg[5:0], it can take values from (63 downto 0)
+Therefore, the minimum value cont1 can take is 0.
+
+Hence, 20 is not reachable

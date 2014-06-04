@@ -44,6 +44,8 @@ state_t::state_t(const Vtop* copy_obj, int index_) :
 
 	GetCoverage(copy_obj, branch_index);
 
+//	printState();
+
 	mem_alloc_cnt++;
 }
 
@@ -100,7 +102,11 @@ string state_t::operator[] (int index_) {
 }
 
 void state_t::printState (bool full_) {
-	cout << state_val << endl;
+	cout << state_val.substr(0,6)	<< " "
+		 << state_val.substr(6,4)	<< " "
+		 << state_val.substr(10,6)	<< " "
+		 << state_val.substr(16,32) << " "
+		 << endl;
 	for (vector<int>::iterator it = branch_index.begin();
 			it != branch_index.end(); ++it)
 		cout << *it << " ";
@@ -108,7 +114,7 @@ void state_t::printState (bool full_) {
 }
 
 void state_t::setCktState(Vtop* top) {
-	uint val = 0;
+	int val = 0;
 	for(int i = 0; i < CONST_NUM_STATE_BITS; ++i) {
 
 		val = val << 1;
@@ -146,12 +152,15 @@ void set_input(Vtop *top, const vecIn_t& input)
 {
 	assert(input.length() == (uint)CONST_NUM_INPUT_BITS);
 	top->x_in = 0; 
-	for(uint i = 0; i < 4; ++i) {
+	for(uint i = 0; i < 6; ++i) {
 		top->x_in = top->x_in << 1;
 		if (input[i] == '1')
 			top->x_in++;
 	}
 	top->stbi = input[6] - 48;
+
+//	cout << (int) top->x_in << " : " 
+//		 << (int) top->stbi << endl;
 }
 
 void RandomVecIn(vecIn_t& vecIn)
@@ -310,10 +319,10 @@ void setAllXState(Vtop* top) {
 }
 
 void printCktState (Vtop* top) {
-   	cout << (uint) top->v__DOT__r_in	<< " "
-    	 << (uint) top->v__DOT__stato	<< " "
-   		 << (uint) top->v__DOT__cont1	<< " "
-   		 << (uint) top->v__DOT__cont1	<< " "
+   	cout << (int) top->v__DOT__r_in	<< " "
+    	 << (int) top->v__DOT__stato	<< " "
+   		 << (int) top->v__DOT__cont1	<< " "
+   		 << (int) top->v__DOT__cont1	<< " "
 		 << endl;
 }
 

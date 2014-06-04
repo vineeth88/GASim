@@ -209,6 +209,8 @@ class Stage2_Param : public Stage1_Param {
 	
 	public:
 
+	int MAX_ROUNDS;
+
 	state_t *	startState;
 	Vtop *		cktVar;
 
@@ -223,7 +225,9 @@ class Stage2_Param : public Stage1_Param {
 	int 		curr_val, end_val;
 	int			tar_edge, tar_node;
 
-	Stage2_Param() {	
+	Stage2_Param() {
+
+		MAX_ROUNDS = 20;
 		cktVar = NULL;
 		branchHit = int_vec(CONST_NUM_BRANCH, 0);
 		lastBranchHit = int_vec(CONST_NUM_BRANCH, 0);
@@ -242,6 +246,7 @@ class Stage2_Param : public Stage1_Param {
 		branch_index = (obj->stateList.back())->branch_index;
 
 		cktVar = NULL;
+		MAX_ROUNDS = 20;
 
 		favorSet = set<int>();
 		unCovered = set<int>();
@@ -265,7 +270,7 @@ void Stage1_GenerateVectors(Stage1_Param*);
 void readParam(Stage1_Param*);
 void readParam(Stage2_Param*);
 
-void readTopNodes(graph&, brGraph_t&);
+bool readTopNodes(graph&, brGraph_t&);
 void getTarget(Stage2_Param*, int, set<int>&);
 int getPathBFS(brGraph_t*, int, int, string&);
 
@@ -282,7 +287,7 @@ bool compCoverage(gaIndiv_t*, gaIndiv_t*);
 
 int main(int argc, char* argv[]) {
 
-//#define random_seed
+#define random_seed
 #ifdef random_seed
     uint seed = time(NULL);
     cout << seed << endl;
@@ -359,13 +364,17 @@ int main(int argc, char* argv[]) {
 	brGraph_t branchGraph;
 	sprintf(covGraph.fName, "%s.graph", benchCkt);
 	readGraph(covGraph);
-	readTopNodes(covGraph, branchGraph);
+	bool brFlag = readTopNodes(covGraph, branchGraph);
 	
-	string tmpPath;
-	getPathBFS(&branchGraph, 82, 40, tmpPath);
+	if (!brFlag) {
+		PrintVectorSet(paramObj1->inputVec, true);
+		delete paramObj1;
+		return 0;
+	}		
+	//string tmpPath;
+	//getPathBFS(&branchGraph, 82, 40, tmpPath);
 	vecIn_t TestVectorSet = paramObj1->inputVec;
 
-	exit(0);
 	cout << "Stage 2 " << endl << endl;
 	Stage2_Param *paramObj2 = new Stage2_Param(paramObj1);
 	paramObj2->inputVec = "";// paramObj1->inputVec;
@@ -385,7 +394,7 @@ int main(int argc, char* argv[]) {
 	set<int> &favorSet = paramObj2->favorSet;
 	set<int> &unCovered = paramObj2->unCovered;
 	
-	int MAX_ROUNDS = 20;
+	int MAX_ROUNDS = paramObj2->MAX_ROUNDS;
 	for (int num_round = 0; num_round < MAX_ROUNDS; ++num_round) {
 	
 	unCovered.clear();
@@ -514,9 +523,142 @@ int main(int argc, char* argv[]) {
 
 	}
 	else {
-		cout << "No reachable path. Simulating vector for next state." << endl;
-	}
+		cout << endl
+			 << " * * * * * * * * * * * * * " << endl
+			 << "No reachable path. Simulating vector for next state." << endl;
+
+		stateMap_t nxtStateMap;
+		map<keyVal_t, vecIn_t> vecMap;
+		gaPopulation_t nxtStatePop(paramObj2->POP_SIZE, 1);
+		
+		state_pVec initPool;
+		initPool.push_back(paramObj2->stateList.back());
+		
+		cout << "Start state: " << endl;
+		initPool[0]->printState();
+		cout << endl;
+
+		nxtStatePop.initPopulation(initPool);
+
+		Vtop *cktVar = paramObj2->cktVar;
+		for (int ind = 0; ind < paramObj2->POP_SIZE; ++ind) {
+			
+			ResetCounters(cktVar);
+			gaIndiv_t* indiv = nxtStatePop.indiv_vec[ind];
+			indiv->simCkt(cktVar);
+
+			int vt = 0;
+			for (state_pVec_iter st = indiv->state_list.begin(); 
+					st != indiv->state_list.end(); ++st, ++vt) {
+				keyVal_t hash = (*st)->getHash();
+				retVal_t ret = nxtStateMap.insert(make_pair(hash, *st));
+				if (ret.second == false) {
+					(ret.first->second)->hit_count++;
+				}
+				vecMap.insert(make_pair(hash, indiv->input_vec)); 
+			}
+		}
+
+		vector<vecIn_t> nxtVec;
+		vector<int> nxtPaths;
+		for (stateMap_iter st = nxtStateMap.begin(); st != nxtStateMap.end(); ++st) {
+			cout << "State: ";
+			st->second->printState();
+			cout << "Hits : " << st->second->hit_count << endl;
+			cout << "Vector: " << vecMap[st->first] << endl;
+			cout << endl;
+
+			int_vec edgeVec;
+			edgeVec.clear();
+			state_t *curr = st->second;
+			for (int_vec_iter br = curr->branch_index.begin(); 
+					br != curr->branch_index.end(); ++br) {
+				if (IsBranchLeaf[*br])	{
+					bEdge_t* curr_edge = branchGraph.getEdge(*br);
+					if (curr_edge) 
+						edgeVec.push_back(*br);
+				}
+			}
+
+			int curr_val = edgeVec.back();
+			bEdge_t* curr_edge = branchGraph.getEdge(curr_val);
+			int start_val = curr_edge->startTop;
+			int end_val = curr_edge->endTop;
+
+			bNode_t* curr_node = branchGraph.getNode(end_val);
+			assert(curr_node);
+			
+			string target_path = "Unreachable";
+			int target_lvl = (2 << 20);
+			int target_node = -1;
+
+			/*	- Find path from curr_node to all the start_nodes of the uncovered edges
+				- Find the uncovered edge with the shortest path
+				- Set the topNode(start_node) as the target_node */
+			int num_paths;
+			for (set<int>::iterator it = unCovered.begin(); it != unCovered.end(); ++it) {
+				string path;
+				int lvl = getPathBFS(&branchGraph, end_val, *it, path);
+				cout << *it << ": " << path << endl;
+				if (path.compare("Unreachable")) {
+					num_paths++;
+					if (target_lvl > lvl) {
+						target_lvl = lvl;
+						target_node = *it;
+						target_path = path;
+					}
+				}
+			}
+
+			if (target_path.compare("Unreachable")) {
+				nxtVec.push_back(vecMap[st->first]);
+				nxtPaths.push_back(num_paths);
+			}
+		}
+
+		int max_num_paths = -1, max_path_index = -1;
+		for (int np = 0; np < nxtPaths.size(); ++np) {
+			if (nxtPaths[np] > max_num_paths) {
+				max_num_paths = nxtPaths[np];
+				max_path_index = np;
+			}
+		}
+		
+		cout << endl;
+
+		(paramObj2->stateList.back())->setCktState(cktVar);
+		SimOneCycle(cktVar, nxtVec[max_path_index]);
+		state_t *tmpState = new state_t(cktVar, paramObj2->stateList.size());
+		(paramObj2->stateList).push_back(tmpState);
+		paramObj2->inputVec += nxtVec[max_path_index];
+
+		cout << "Adding vector: " << nxtVec[max_path_index] << endl
+			 << "State: " << endl;
+		tmpState->printState();
+		cout << endl; 
+
+		paramObj2->lastBranchHit = int_vec(CONST_NUM_BRANCH, 0);
+		for (int_vec_iter it = tmpState->branch_index.begin();
+				it != tmpState->branch_index.end(); ++it)
+			paramObj2->lastBranchHit[*it]++;
+
+		paramObj2->branch_index = tmpState->branch_index;
+		for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind)
+			paramObj2->branchHit[ind] += paramObj2->lastBranchHit[ind];
+		printCnt(paramObj2->lastBranchHit);
+		printCnt(paramObj2->branchHit);
+
+		for( set<int>::iterator br = favorSet.begin(); br != favorSet.end(); ++br) {
+			if (paramObj2->lastBranchHit[*br] != 0)
+				paramObj2->favorSet.erase(*br);
+		}
+		cout << "Elements in favorSet after = ";
+		printSet(paramObj2->favorSet);
+		cout << endl;
 				
+//		getchar();
+		cout << " * * * * * * * * * * * * * * * * * * * * " << endl << endl;
+	}
 //	if (target_path.compare("Unreachable")) {
 //		if (target_lvl == 1) {
 //			/*	Target lies at distance of 1	*/
@@ -603,7 +745,7 @@ int main(int argc, char* argv[]) {
 //		cout << "No reachable path. Simulating vector for next state." << endl;
 //	}
 
-	getchar();
+//	getchar();
 	}
 	exit(0);
 	PrintVectorSet(paramObj2->inputVec);
@@ -624,8 +766,8 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 	cout << "Current params: " << endl
 		 << "Edge: " << paramObj->curr_val << endl
 		 << "Node: " << paramObj->end_val << endl;
-	int NUM_GEN	= 2; //paramObj->NUM_GEN;
-	int POP_SIZE = 64; //paramObj->POP_SIZE;
+	int NUM_GEN	= paramObj->NUM_GEN;
+	int POP_SIZE = paramObj->POP_SIZE;
 	int VEC_LEN = paramObj->INDIV_LEN/CONST_NUM_INPUT_BITS;
 
 	cout << "Vec Length: " << VEC_LEN << endl;
@@ -646,7 +788,7 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 	printCktState(cktVar);
 	ResetCounters(cktVar);
 
-	cout << "Elements in favorSet after = ";
+	cout << "Elements in favorSet before = ";
 	printSet(paramObj->favorSet);
 	cout << endl;
 
@@ -654,7 +796,7 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 	gaPopulation_t stage2Pop(POP_SIZE, VEC_LEN);
 	stage2Pop.initPopulation(startPool);
 	
-	int CONST_IMPT_BRANCH = 50;
+	int CONST_IMPT_BRANCH = 100;
 	int CONST_TARGET_BRANCH = -100;
 	int CONST_UNIMPT_BRANCH = 200;
 
@@ -812,14 +954,15 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 	level.insert(make_pair(start, 0));
 	label.insert(make_pair(start, ""));
 
-	const int THRESH_LEVEL = 5;
+	const int THRESH_LEVEL = 10;
+	const int MAX_QUEUE_SIZE = 100;
 	for (int qInd = 0; (uint) qInd < bfsQueue.size(); ++qInd) {
 
 		int front = bfsQueue[qInd];
 		bNode_t* curr = brGraph->getNode(front);
 		assert(curr);
 
-//		cout << "F: " << front << endl;
+	//	cout << "F: " << front << endl;
 		for (int eInd = 0; (uint) eInd < curr->outNodes.size(); ++eInd) {
 			int node_ = curr->outNodes[eInd];
 			
@@ -847,13 +990,13 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 
 			bfsQueue.push_back(node_);
 
-//			cout << "Queued " << node_ 
-//				 << " Level: " << tmpLevel
-//				 << " Label: " << tmpLabel
-//				 << " Max_Lvl: " << max_level << endl;
+	//		cout << "Queued " << node_ 
+	//			 << " Level: " << tmpLevel
+	//			 << " Label: " << tmpLabel
+	//			 << " Max_Lvl: " << max_level << endl;
 		}
 
-		if (max_level > THRESH_LEVEL) {
+		if ((max_level > THRESH_LEVEL) || (qInd > MAX_QUEUE_SIZE)) {
 			path = "Unreachable";
 			return -1;
 		}
@@ -903,7 +1046,7 @@ void getTarget(Stage2_Param* paramObj, int currEdge, set<int>& favorSet) {
 	}
 }
 
-void readTopNodes(graph& graphCov, brGraph_t& branchGraph) {
+bool readTopNodes(graph& graphCov, brGraph_t& branchGraph) {
 
 	int_vec leafNodes;
 	int_vec topNodes;
@@ -949,7 +1092,7 @@ void readTopNodes(graph& graphCov, brGraph_t& branchGraph) {
 	brFile.open(fName, ios::in);
 	if (brFile == NULL) {
 		cout << "Unable to open file " << fName << endl;
-		return;
+		return false;
 	}
 	
 	for (int lNum = 0; brFile && (uint) lNum < topNodes.size(); ++lNum) {
@@ -988,9 +1131,9 @@ void readTopNodes(graph& graphCov, brGraph_t& branchGraph) {
 	}
 	
 	brFile.close();
-//	branchGraph.printGraph();
+	branchGraph.printGraph();
 
-    return;
+    return true;
 }
 
 void Stage1_GenerateVectors(Stage1_Param* paramObj) {
@@ -1413,6 +1556,19 @@ void readParam(Stage2_Param* paramObj) {
 				else 
 					paramObj->INDIV_LEN = 20;
 			}
+			else if (curr.find("MAX_ROUNDS") != string::npos) {
+				size_t ind = curr.find("=");
+				if (ind != string::npos) {
+					stringstream ss;
+					int val;
+					ss << curr.substr(ind+1);
+					ss >> val;
+					cout << "MAX_ROUNDS = " << val << endl;
+					paramObj->MAX_ROUNDS = val;
+				}
+				else 
+					paramObj->MAX_ROUNDS = 20;
+			}
 		}
 		cout << "Finished parsing " << paramObj->fName << endl;
 		paramIn.close();
@@ -1447,9 +1603,13 @@ void printSet(set<int>& vec_) {
 }
 
 void printCnt(int_vec& vec_) {
-	for (uint v = 0; v < vec_.size(); ++v)
+	int num_branch = 0;
+	for (uint v = 0; v < vec_.size(); ++v) {
 		cout << v << "(" << vec_[v] << ") ";
-	cout << endl;
+		if (vec_[v] == 0)
+			num_branch++;
+	}
+	cout << endl << "#Branch " << CONST_NUM_BRANCH - num_branch << endl;
 }
 
 void PrintVectorSet(const vecIn_t& inputVec, bool printFlag ) {

@@ -32,10 +32,14 @@
 	#define rstInput 1
 	#include "b12Int.h"
 
+#elif defined(__b14)
+	#define benchCkt "b14"
+	#define benchDir "bench/b14/"
+	#include "b14Int.h"
+
 #elif defined(__or1200_0)
 	#define benchCkt "or1200_0"
 	#define benchDir "bench/or1200_0/"
-	#define rstInput 1
 	#include "or1200_0Int.h"
 
 #endif
