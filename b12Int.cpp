@@ -5,9 +5,9 @@ using namespace std;
 keyVal_t state_t :: getHash() {
 	keyVal_t hash_value = 
 		state_val.substr(8,2) +  // data_out
-		state_val.substr(12,3) +  // sound
-		state_val.substr(13,1) +  // play
-		state_val.substr(17,3) +  // counter
+	//	state_val.substr(12,3) +  // sound
+	//	state_val.substr(13,1) +  // play
+	//	state_val.substr(17,3) +  // counter
 		state_val.substr(86,5) +  // gamma
 		state_val.substr(93,5) +  // scan
 		state_val.substr(98,5) +  // max
