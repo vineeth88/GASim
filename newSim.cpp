@@ -8,6 +8,10 @@
 rstIn_t gVarClass::resetInput = rstIn_t(CONST_NUM_INPUT_BITS, 'X');
 int_vec IsBranchLeaf(CONST_NUM_BRANCH, 0);
 
+vector<vecIn_t> BranchInputVec(CONST_NUM_BRANCH, string(""));
+vector<string> BranchStateVal(CONST_NUM_BRANCH, string(""));
+int_vec BranchNumTries(CONST_NUM_BRANCH, 0);
+
 int gaIndiv_t::mem_alloc_cnt = 0;
 int state_t::mem_alloc_cnt = 0;
 //int Vtop::mem_alloc_cnt = 0;
@@ -277,6 +281,9 @@ int getPathBFS(brGraph_t*, int, int, string&);
 void readBranchGraph(brGraph_t&);
 void Stage2_GenerateVectors(Stage2_Param*);
 
+int AddVector2Branch(int, vecIn_t);
+int AddState2Branch(int, state_t*);
+
 int checkCoverage(const vecIn_t&);
 void DisplayMap(stateMap_t&);
 void printVec(int_vec&);
@@ -377,10 +384,11 @@ int main(int argc, char* argv[]) {
 
 	cout << "Stage 2 " << endl << endl;
 	Stage2_Param *paramObj2 = new Stage2_Param(paramObj1);
-	paramObj2->inputVec = "";// paramObj1->inputVec;
+	paramObj2->inputVec = paramObj1->inputVec;
 	paramObj2->branchGraph = &branchGraph;
 	paramObj2->startState = paramObj1->stateList.back();
 	paramObj2->stateList = paramObj1->stateList;
+	paramObj1->stateList.clear();
 	paramObj2->cktVar = new Vtop;
 
 	SimMultiCycle(paramObj2->cktVar, paramObj1->inputVec);
@@ -467,47 +475,51 @@ int main(int argc, char* argv[]) {
 		for (int st = 0; (uint) st < target_path.length(); ++st) {
 			int brInd = target_path[st] - 48;
 			int tar_edge = iter_node->outEdges[brInd];
-			favorSet.insert(tar_edge);
-			cout << "favorSet <- " << tar_edge << endl;
-			int self_loop_br = -1;
+
+			cout << " Path[" << st << "/" << target_path.length() << "]: " << tar_edge << endl;
+
+			int_vec self_loop_br;
 			for (int br = 0 ; br < iter_node->outNodes.size(); ++br) {
-				favorSet.insert(iter_node->outEdges[br]);
 				if (iter_node->outNodes[br] == iter_val) {
-			//		favorSet.insert(iter_node->outEdges[br]);
-					favorSet.insert(iter_val);
-					self_loop_br = iter_node->outEdges[br];
-					cout << "favorSet <- " << self_loop_br << endl;
+					self_loop_br.push_back(iter_node->outEdges[br]);
 				}
 			}
 
-			if (self_loop_br != -1)
-				cout << "Self-loop: " << self_loop_br << endl;
+			if (self_loop_br.size()) {
+				cout << "Self-loop: ";
+				printVec(self_loop_br);
+				cout << endl;
+			}
+
 			/* Run stage 2	*/
 			paramObj2->tar_edge = tar_edge;
-			paramObj2->tar_node = iter_val;
+			paramObj2->tar_node = iter_node->outNodes[brInd];
 
 			Stage2_GenerateVectors(paramObj2);
-			bool branch_hit = false;
+			int branch_hit = 20;
 			for (int br = 0; br < iter_node->outEdges.size(); ++br) {
 				int tmp_edge = iter_node->outEdges[br];
 				if ((paramObj2->lastBranchHit[tmp_edge]) && 
 					(iter_node->outNodes[br] != iter_val))
-						branch_hit = true;
+						branch_hit = 0;
 			}
-			if (!branch_hit) {
-				if(self_loop_br != -1) {
-					while (!branch_hit) {
+			if (branch_hit) {
+				if(self_loop_br.size()) {
+					while (branch_hit) {
 						/*	Run stage 2	*/
-						favorSet.insert(self_loop_br);
-						favorSet.insert(iter_val);
-						cout << "favorSet <- " << self_loop_br << endl;
 						Stage2_GenerateVectors(paramObj2);
+						if (paramObj2->lastBranchHit[tar_edge]) {
+							branch_hit = 0;
+							break;
+						}
 						for (int br = 0; br < iter_node->outEdges.size(); ++br) {
 							int tmp_edge = iter_node->outEdges[br];
 							if ((paramObj2->lastBranchHit[tmp_edge]) && 
 								(iter_node->outNodes[br] != iter_val))
-									branch_hit = true;
+									branch_hit = 1;
 						}
+						branch_hit--;
+						cout << "In branch_hit : " << branch_hit << endl;
 					}
 				}
 				else {
@@ -521,6 +533,7 @@ int main(int argc, char* argv[]) {
 			assert(iter_node);
 		}
 
+		cout << endl << "END OF PATH" << endl;
 	}
 	else {
 		cout << endl
@@ -617,6 +630,11 @@ int main(int argc, char* argv[]) {
 		}
 
 		int max_num_paths = -1, max_path_index = -1;
+		if (nxtPaths.size() == 0) {
+			PrintVectorSet(paramObj2->inputVec, true);
+			assert(nxtPaths.size());
+		}
+
 		for (int np = 0; np < nxtPaths.size(); ++np) {
 			if (nxtPaths[np] > max_num_paths) {
 				max_num_paths = nxtPaths[np];
@@ -659,99 +677,19 @@ int main(int argc, char* argv[]) {
 //		getchar();
 		cout << " * * * * * * * * * * * * * * * * * * * * " << endl << endl;
 	}
-//	if (target_path.compare("Unreachable")) {
-//		if (target_lvl == 1) {
-//			/*	Target lies at distance of 1	*/
-//			int brInd = target_path[0] - 48;
-//			cout << "favorSet <- " << curr_node->outEdges[brInd] << endl;
-//			favorSet.insert(curr_node->outEdges[brInd]);
-////			favorSet.insert(curr_node->outNodes[brInd]);
-//			while(favorSet.size()) {
-//				favorSet.insert(curr_node->outEdges[brInd]);
-//				for (int_vec_iter br = curr_node->outEdges.begin(); 
-//						br != curr_node->outEdges.end(); ++br) {
-//					if(branchHit[*br] == 0)
-//						favorSet.insert(*br);
-//					else if (*br == curr_val)
-//						favorSet.insert(*br);
-//				}
-//				Stage2_GenerateVectors(paramObj2);
-//
-//			//	getchar();
-//			//	TestVectorSet += paramObj2->inputVec;
-//			}
-//
-//		}
-//		else {
-//			/*	Target lies at distance > 1*/
-//			for (int st = 0; (uint)st < target_path.length(); ++st) {
-//				int brInd = target_path[st] - 48;
-//				cout << "favorSet <- " << curr_node->outEdges[brInd] << endl;
-//				favorSet.insert(curr_node->outEdges[brInd]);
-////				favorSet.insert(curr_node->outNodes[brInd]);
-//				while(favorSet.size()) {
-//					favorSet.insert(curr_node->outEdges[brInd]);
-//					for (int_vec_iter br = curr_node->outEdges.begin(); 
-//							br != curr_node->outEdges.end(); ++br) {
-//						if(branchHit[*br] == 0)
-//							favorSet.insert(*br);
-//						else if (*br == curr_val)
-//							favorSet.insert(*br);
-//					}
-//					Stage2_GenerateVectors(paramObj2);
-//				//	getchar();
-//				}
-//				cout << "Reached ... " << endl;
-//
-//				/*	edgeVec = The list of edges traversed in the last cycle	*/
-//				int_vec edgeVec;
-//				for (int_vec_iter br = branch_index.begin(); br != branch_index.end(); ++br) {
-//					if (IsBranchLeaf[*br])	{
-//						bEdge_t* curr_edge = branchGraph.getEdge(*br);
-//						if (curr_edge) 
-//							edgeVec.push_back(*br);
-//					}
-//				}
-//				
-//				/* 	curr_val = Selected edge with endpoints start_val -> end_val */
-//				int curr_val = edgeVec.back();
-//				bEdge_t* curr_edge = branchGraph.getEdge(curr_val);
-//				int start_val = curr_edge->startTop;
-//				int end_val = curr_edge->endTop;
-//
-//				paramObj2->curr_val = curr_val;
-//				paramObj2->end_val = end_val;
-//				curr_node = branchGraph.getNode(end_val);
-//				assert(curr_node);
-//
-//				getchar();
-//			}	
-//
-//		}
-//
-//		cout << "Reached destination node " << target_node << endl;
-//		bNode_t* tNode = branchGraph.getNode(target_node);
-//		assert(tNode);
-//		for (int_vec_iter it = tNode->outEdges.begin();
-//				it != tNode->outEdges.end(); ++it) {
-//			if (branchHit[*it] == 0)
-//				cout << *it << " ";
-//		}
-//		
-////		PrintVectorSet(paramObj2->inputVec);
-//		
-//	}
-//	else {
-//		cout << "No reachable path. Simulating vector for next state." << endl;
-//	}
-
-//	getchar();
 	}
+	int i = 0;
+	for (state_pVec_iter st = paramObj2->stateList.begin();
+			st != paramObj2->stateList.end(); ++st, ++i) {
+		cout << paramObj2->inputVec.substr(i*CONST_NUM_INPUT_BITS, CONST_NUM_INPUT_BITS);
+		cout << endl;
+		(*st)->printState(1);
+		cout << endl << endl;
+	}
+	PrintVectorSet(paramObj2->inputVec, true);
+	
 	exit(0);
-	PrintVectorSet(paramObj2->inputVec);
-
 	delete paramObj2;
-//	#endif 
 
 	return 0;
 }
@@ -766,11 +704,11 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 	cout << "Current params: " << endl
 		 << "Edge: " << paramObj->curr_val << endl
 		 << "Node: " << paramObj->end_val << endl;
+
 	int NUM_GEN	= paramObj->NUM_GEN;
 	int POP_SIZE = paramObj->POP_SIZE;
 	int VEC_LEN = paramObj->INDIV_LEN/CONST_NUM_INPUT_BITS;
 
-	cout << "Vec Length: " << VEC_LEN << endl;
 	brGraph_t *branchGraph = paramObj->branchGraph;
 	set<int> &favorSet = paramObj->favorSet;
 	int_vec &branchHit = paramObj->branchHit;
@@ -788,23 +726,41 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 	printCktState(cktVar);
 	ResetCounters(cktVar);
 
-	cout << "Elements in favorSet before = ";
-	printSet(paramObj->favorSet);
+	for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
+		cout << "Branch " << br << ":\t " << BranchInputVec[br] 
+			 //<< "\t " << BranchNumTries[br]
+			 << endl << BranchStateVal[br] << endl;
+	}
 	cout << endl;
+
+	cout << "Elements in favorSet before = { ";
+	printSet(paramObj->favorSet);
+	cout << " } " <<  endl;
 
 	/*	Run GA	*/
 	gaPopulation_t stage2Pop(POP_SIZE, VEC_LEN);
 	stage2Pop.initPopulation(startPool);
 	
-	int CONST_IMPT_BRANCH = 100;
-	int CONST_TARGET_BRANCH = -100;
-	int CONST_UNIMPT_BRANCH = 200;
-
-//	int curr_val = paramObj->curr_val;
-//	int end_val = paramObj->end_val;
+	int WT_TAR_EDGE = -200;
+	int WT_TAR_NODE = -100;
+	int WT_SELF_EDGE = -50;
+	int WT_OUT_EDGE = 100;
+	int WT_UNIMPT	= 200;
 
 	int tar_edge = paramObj->tar_edge;
 	int tar_node = paramObj->tar_node;
+
+	bEdge_t* tar_edge_obj = branchGraph->getEdge(tar_edge);
+	assert(tar_edge_obj);
+	if (tar_edge_obj->endTop != tar_node) {
+		cout << "Edge " << tar_edge 
+			 << " ends in "	<< tar_edge_obj->endTop
+			 << " not in " 	<< tar_node << endl;
+	}
+	assert(tar_edge_obj->endTop == tar_node);
+
+	bNode_t* tar_node_obj = branchGraph->getNode(tar_node);
+	assert(tar_edge_obj);
 
 	bool gaTerminate = false;
 	fitness_t prev_gen_fitness = (2 << 24), curr_gen_fitness = (2 << 25);
@@ -814,64 +770,82 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 		cout << "GEN " << gen << endl << endl;
 		int_vec currBranchCov(CONST_NUM_BRANCH, 0);
 
+		fitness_t curr_gen_max_fit = - (2 << 25), curr_gen_min_fit = (2 << 25);
 		for (int ind = 0; ind < POP_SIZE; ++ind) {
 			
 			ResetCounters(cktVar);
 			gaIndiv_t* indiv = stage2Pop.indiv_vec[ind];
+			for (int x = 0; x < indiv->input_vec.length(); x += 5) 
+				indiv->input_vec[x] = '0';
+
 			indiv->simCkt(cktVar);
 
-			int_vec state_fit_vec(indiv->state_list.size(), 0);
-			int ind = 0;
+			int_vec state_fit_vec;
 
 //			cout << "States: " << endl;
+			int branch_val = -1;
+			bool exit_state = false;
+			int sv = 0;
 			for (state_pVec_iter st = indiv->state_list.begin();
-					st != indiv->state_list.end(); ++st, ind++) {
+					st != indiv->state_list.end(); ++st, ++sv) {
 				
-				bool branch_p = false;
-				int branch_val = -1;
 				int state_fit = 0;
+				vecIn_t inp = indiv->input_vec.substr(sv*CONST_NUM_INPUT_BITS, CONST_NUM_INPUT_BITS);
 				for (int_vec_iter br = (*st)->branch_index.begin(); 
-						br != (*st)->branch_index.end() && !branch_p; ++br) {
+						br != (*st)->branch_index.end() && !exit_state; ++br) {
+
+					AddVector2Branch(*br, inp);
+
 					if (IsBranchLeaf[*br] == 0)
 						continue;
 
-//					if (favorSet.find(*br) != favorSet.end()) {
-//						state_fit += CONST_IMPT_BRANCH;
-//						if ((*br != curr_val) && (*br != end_val)) {
-//							state_fit += CONST_TARGET_BRANCH;
-//							branch_p = true;
-//							branch_val = *br;
-//						}
-//					}
-//					else if (IsBranchLeaf[*br]) {
-//						state_fit += CONST_UNIMPT_BRANCH;
-//					}
+					bEdge_t* curr_edge_obj = branchGraph->getEdge(*br);
+					if (curr_edge_obj == NULL)
+						continue;
 
-					if (favorSet.find(*br) != favorSet.end()) {
-						state_fit += CONST_IMPT_BRANCH;
-						if (*br == tar_edge) {
-							state_fit += CONST_TARGET_BRANCH;
-							branch_p = true;
-							branch_val = *br;
-						}
-					}
-					else 
-						state_fit += CONST_UNIMPT_BRANCH;
-
-					bNode_t* iter_node = branchGraph->getNode(tar_node);
-					for (int bt = 0; (uint) bt < iter_node->outEdges.size(); ++bt) { 
-						if ((iter_node->outEdges[bt] == *br) && 
-							(iter_node->outNodes[bt] != tar_node)) {
-							branch_p = true;
-							branch_val = *br;
-						}
-					}
-					if (branch_p) {
-						cout << "Branch " << branch_val << " reached in " << ind + 1 << " vectors" << endl;
+					if (*br == tar_edge) {
+						state_fit += WT_TAR_EDGE;
+						exit_state = true;
+						branch_val = *br;
 						gaTerminate = true;
 					}
+					else if (curr_edge_obj->endTop == tar_edge_obj->endTop) {
+						state_fit += WT_TAR_NODE;
+						branch_val = *br;
+						exit_state = true;
+					}
+					else {
+						int curr_node = curr_edge_obj->startTop;
+						bNode_t* curr_node_obj = branchGraph->getNode(curr_node);
+
+						bool unimpt_branch = true;
+						for (int bt = 0; (uint) bt < curr_node_obj->outEdges.size(); ++bt) { 
+							if (curr_node_obj->outEdges[bt] == *br) {
+								unimpt_branch = false;
+								if (curr_node_obj->outNodes[bt] == curr_node) {
+									state_fit += WT_SELF_EDGE;
+									exit_state = false;
+								}
+								else {
+									state_fit += WT_OUT_EDGE;
+									exit_state = true;
+									branch_val = *br;
+								}
+							}
+						}
+						
+						if(unimpt_branch)
+							state_fit += WT_UNIMPT;
+					}
+
 				}
-				state_fit_vec[ind] = state_fit;
+
+				state_fit_vec.push_back(state_fit);
+				if (exit_state) {
+					cout << branch_val << " reached in " << state_fit_vec.size() << " vectors" << endl;
+					break;
+				}
+
 			}
 
 			cout << "Fitness: ";
@@ -880,24 +854,38 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 
 			indiv->fitness = 0;			
 			int max_ind = -1, max_fit = (2 << 20);
-//			cout << "max_fitness = " << max_fit << endl;
-			for (int it = 0; (uint)it < indiv->state_list.size(); ++it) {
+			for (int it = 0; (uint)it < state_fit_vec.size(); ++it) {
 				if (max_fit >= state_fit_vec[it]) {
 					max_ind = it;
 					max_fit = state_fit_vec[it];
 				}
 				indiv->fitness += state_fit_vec[it];
 			}
-			indiv->fitness /= indiv->state_list.size();
+//			indiv->fitness /= indiv->state_list.size();
 			if (max_ind != -1)
 				indiv->max_index = max_ind;
+//			indiv->max_index = state_fit_vec.size() - 1;
 
-			if (curr_gen_fitness > indiv->fitness)
+			if (curr_gen_fitness >= indiv->fitness)
 				curr_gen_fitness = indiv->fitness;
+			
+			if (curr_gen_min_fit >= indiv->fitness)
+				curr_gen_min_fit = indiv->fitness;
+			
+			if (curr_gen_max_fit <= indiv->fitness)
+				curr_gen_max_fit = indiv->fitness;
+			
+			cout << "Fitness(" << indiv->index << "): " 
+				 << indiv->fitness << " : " 
+				 << indiv->max_index + 1 << " vectors " 
+				 << endl << endl;
+		}	
+		
+		cout << "Max: " << curr_gen_max_fit
+			 << " Min: " << curr_gen_min_fit << endl;
+		if (curr_gen_max_fit == curr_gen_min_fit)
+			gaTerminate = true;
 
-			cout << "Fitness(" << indiv->index << "): " << indiv->fitness << endl;
-		}
-	
 		gaTerminate = gaTerminate || (gen == NUM_GEN-1) || (prev_gen_fitness < curr_gen_fitness);
 		if (!gaTerminate) {
 			stage2Pop.gaEvolve();
@@ -917,6 +905,10 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 	paramObj->inputVec += indiv->input_vec.substr(0, CONST_NUM_INPUT_BITS * (indiv->max_index + 1));
 	for (int ind = 0; ind <= indiv->max_index; ++ind) {
 		state_t *st = indiv->state_list[ind];
+		if (st == NULL) {
+			cout << "GG" << endl;
+			break;
+		}
 		for (int_vec_iter it = st->branch_index.begin();
 				it != st->branch_index.end(); ++it)
 			//paramObj->branchHit[*it]++;
@@ -954,7 +946,7 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 	level.insert(make_pair(start, 0));
 	label.insert(make_pair(start, ""));
 
-	const int THRESH_LEVEL = 10;
+	const int THRESH_LEVEL = 20;
 	const int MAX_QUEUE_SIZE = 100;
 	for (int qInd = 0; (uint) qInd < bfsQueue.size(); ++qInd) {
 
@@ -1412,6 +1404,54 @@ int checkCoverage(const vecIn_t& inputVec) {
 	delete top;
 
 	return index;
+}
+
+int AddVector2Branch(int branch_index, vecIn_t inp) {
+	assert(inp.length() == CONST_NUM_INPUT_BITS);
+	if (BranchInputVec[branch_index].compare("") == 0) {
+		BranchInputVec[branch_index] = inp;
+		return 0;
+	}
+	else {
+		vecIn_t& brInp = BranchInputVec[branch_index];
+		bool t = false;
+		for (int ind = 0; ind < CONST_NUM_INPUT_BITS; ++ind) {
+			if (brInp[ind] == 'X')
+				continue;
+			else if (brInp[ind] != inp[ind]) {
+				brInp[ind] = 'X';
+				t = true;
+			}
+		}
+		if (t)
+			return -1;
+		else
+			return 1;
+	}
+}
+
+int AddState2Branch(int branch_index, state_t* st) {
+	if (BranchStateVal[branch_index].compare("") == 0) {
+		BranchStateVal[branch_index] = st->state_val;
+		return 0;
+	}
+	else {
+		string &brSt = BranchStateVal[branch_index];
+		string inp = st->state_val;
+		bool t = false;
+		for (int ind = 0; ind < CONST_NUM_STATE_BITS; ++ind) {
+			if (brSt[ind] == 'X')
+				continue;
+			else if (brSt[ind] != inp[ind]) {
+				brSt[ind] = 'X';
+				t = true;
+			}
+		}
+		if (t)
+			return -1;
+		else
+			return 1;
+	}
 }
 
 void readParam(Stage1_Param* paramObj) {

@@ -25,14 +25,32 @@ int main(int argc, char* argv[]) {
         }
 	}		
 
-	SimMultiCycle(cktVar, 0);
-	for (int br = 0; br < CONST_NUM_BRANCH; ++br)
-		if (GetCoverage(cktVar, br))
-			branch_counters[br] = 5;
+//	SimMultiCycle(cktVar, 0);
+//	for (int br = 0; br < CONST_NUM_BRANCH; ++br)
+//		if (GetCoverage(cktVar, br))
+//			branch_counters[br] = 5;
 	
 	vecIn_t inputVec;
 	ReadInputVectors(inputVec,-1);
 	SimMultiCycle(cktVar, inputVec);
+//	int len_vec = inputVec.length() / CONST_NUM_INPUT_BITS;
+//	cout << "Length: " << len_vec << endl << endl;
+//	state_pVec stateList(len_vec, NULL);
+//	for (int ind = 0; ind < len_vec; ++ind) {
+//		vecIn_t inp = inputVec.substr(ind*CONST_NUM_INPUT_BITS, CONST_NUM_INPUT_BITS);
+//		SimOneCycle(cktVar, inp);
+//		stateList[ind] = new state_t(cktVar, ind);
+//		ResetCounters(cktVar);
+//	}
+//	int i = 0;
+//	for (state_pVec_iter st = stateList.begin();
+//			st != stateList.end(); ++st, ++i) {
+//		cout << inputVec.substr(i*CONST_NUM_INPUT_BITS, CONST_NUM_INPUT_BITS);
+//		cout << endl;
+//		(*st)->printState(1);
+//		cout << endl << endl;
+//		delete *st;
+//	}
 	GetBranchCounters(cktVar, branch_counters);
 	int num = printCnt(branch_counters);
 	cout << num << " branches reached" << endl;

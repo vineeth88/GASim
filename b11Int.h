@@ -45,7 +45,7 @@ void printCktState(Vtop*);
 inline
 bool IsDefaultBranch(const int i)
 {
-    return (/*(i == 20) ||*/ (i == 31));	 // unreachable & default branch
+    return ((i == 20) || (i == 31));	 // unreachable & default branch
 }
 
 // Circuit Simulation Functions
