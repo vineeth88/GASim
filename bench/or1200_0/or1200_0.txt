@@ -24,8 +24,6 @@ reg				hitmiss_eval;
 reg				load;
 reg				cache_inhibit;
 
-assign biu_read = (hitmiss_eval & tagcomp_miss) | (!hitmiss_eval & load);
-
 Branches not reached : 0, 1, 10, 11
 
 Branch 10:
@@ -68,3 +66,17 @@ tagcomp_miss || icqmem_ci_i			1
 !icqmem_cycstb_i					1
 
 ic_en = 1, hitmiss_eval = 0, biudata_error = 0, icqmem_cycstb_i = 0, biudata_valid = 0, icqmem_ci_i = 1
+
+Assignments for hitmiss_eval before state 13
+12, 3
+
+2:	hitmiss_eval <= #1 1'b0;
+3:	hitmiss_eval <= #1 1'b1;
+4:	hitmiss_eval <= #1 1'b0;
+8:	hitmiss_eval <= #1 1'b0;
+9:	hitmiss_eval <= #1 1'b0;
+11:	hitmiss_eval <= #1 1'b0;
+12:	hitmiss_eval <= #1 1'b0;
+15:	hitmiss_eval <= #1 1'b0;
+
+
