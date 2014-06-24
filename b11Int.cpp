@@ -238,6 +238,13 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
     uint main_time = 0;
 	sim_reset_clock(top);
 	//cout << "Simulating " << vecIn << endl;
+
+	stringstream ss;
+   	ss 	<< (int) top->v__DOT__r_in	<< " "
+    	<< (int) top->v__DOT__stato	<< " "
+   		<< (int) top->v__DOT__cont	<< " "
+   		<< (int) top->v__DOT__cont1	<< " "
+		<< endl;
 	
 	assert (vecIn.length() == (uint)CONST_NUM_INPUT_BITS);
 	#ifdef _ResetMask_
@@ -253,6 +260,15 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
         ToggleClk(top);
     }
    	
+	if (GetCoverage(top, 7)) {
+		ss 	<< vecIn << " hit branch 7" << endl; 
+		ss 	<< (int) top->v__DOT__r_in	<< " "
+			<< (int) top->v__DOT__stato	<< " "
+			<< (int) top->v__DOT__cont	<< " "
+			<< (int) top->v__DOT__cont1	<< " "
+			<< endl;
+		cout << ss.str() << endl;
+	}
 }
 
 int GetCoverage(const Vtop* top, bool printCnt) {
