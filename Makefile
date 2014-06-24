@@ -1,4 +1,4 @@
-BENCH = or1200_0
+BENCH = b11
 
 DEFINE_BENCH = -D__${BENCH}
 BENCH_DIR = ./bench/${BENCH}/obj_dir
