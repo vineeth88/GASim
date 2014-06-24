@@ -280,6 +280,7 @@ int getPathBFS(brGraph_t*, int, int, string&);
 
 void readBranchGraph(brGraph_t&);
 void Stage2_GenerateVectors(Stage2_Param*);
+int getDominator(const graph&, const set<int>&);
 
 int AddVector2Branch(int, vecIn_t);
 int AddState2Branch(int, state_t*);
@@ -378,8 +379,11 @@ int main(int argc, char* argv[]) {
 		delete paramObj1;
 		return 0;
 	}		
-	//string tmpPath;
-	//getPathBFS(&branchGraph, 82, 40, tmpPath);
+	
+	string tmpPath;
+	getPathBFS(&branchGraph, 33, 69, tmpPath);
+	//exit(0);
+	
 	vecIn_t TestVectorSet = paramObj1->inputVec;
 
 	cout << "Stage 2 " << endl << endl;
@@ -631,7 +635,8 @@ int main(int argc, char* argv[]) {
 
 		int max_num_paths = -1, max_path_index = -1;
 		if (nxtPaths.size() == 0) {
-			PrintVectorSet(paramObj2->inputVec, true);
+			//PrintVectorSet(paramObj2->inputVec, true);
+			getDominator(covGraph, unCovered);
 			assert(nxtPaths.size());
 		}
 
@@ -692,6 +697,22 @@ int main(int argc, char* argv[]) {
 	delete paramObj2;
 
 	return 0;
+}
+
+int getDominator(const graph& branchGraph, const set<int>& unCovered) {
+	
+//	int root_index = 33;
+//	for (set<int>::iterator it = unCovered.begin(); it != unCovered.end(); ++it) {
+//		
+//		int_vec currPath;
+//		int br = *it;
+//
+//		cout << "Path for " << *it << ": ";
+//		printVec(currPath);
+//		cout << endl;
+//	}
+//	
+//	return 0;
 }
 
 void Stage2_GenerateVectors(Stage2_Param* paramObj) {
@@ -939,6 +960,9 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 	cout << "Finding path from " << start << " -> " << target << endl;
 	map<int, string> label;
 	map<int, int> level;
+	
+	typedef pair< map<int, string>::iterator, bool> retStr;
+	
 	int max_level = -1;
 
 	vector<int> bfsQueue;
@@ -947,25 +971,27 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 	label.insert(make_pair(start, ""));
 
 	const int THRESH_LEVEL = 20;
-	const int MAX_QUEUE_SIZE = 100;
+	const int MAX_QUEUE_SIZE = 1000;
 	for (int qInd = 0; (uint) qInd < bfsQueue.size(); ++qInd) {
 
 		int front = bfsQueue[qInd];
 		bNode_t* curr = brGraph->getNode(front);
 		assert(curr);
 
-	//	cout << "F: " << front << endl;
+		cout << "F: " << front << endl;
 		for (int eInd = 0; (uint) eInd < curr->outNodes.size(); ++eInd) {
 			int node_ = curr->outNodes[eInd];
 			
+			retStr ret;
 			char ch[2];
 			ch[0] = eInd + 48; ch[1] = '\0';
 			string tmpLabel = label[front] + string(ch);
-			label.insert(make_pair(node_, tmpLabel));
+			ret = label.insert(make_pair(node_, tmpLabel));
 
 			int tmpLevel = level[front] + 1;
-			level.insert(make_pair(node_, tmpLevel));
-
+			if (ret.second) {
+				level.insert(make_pair(node_, tmpLevel));
+			}
 //			if (node_ == target) {
 //				path = tmpLabel;
 //				return tmpLevel;
@@ -980,15 +1006,23 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 			if (max_level < tmpLevel)
 				max_level = tmpLevel;
 
-			bfsQueue.push_back(node_);
+			if (ret.second) {
+				bfsQueue.push_back(node_);
+			}
 
-	//		cout << "Queued " << node_ 
-	//			 << " Level: " << tmpLevel
-	//			 << " Label: " << tmpLabel
-	//			 << " Max_Lvl: " << max_level << endl;
+			cout << "Queued " << node_ 
+				 << " Level: " << tmpLevel
+				 << " Label: " << tmpLabel
+				 << " Max_Lvl: " << max_level << endl;
 		}
 
+		cout << "Queue (" << bfsQueue.size() << ")" << endl;
+		printVec(bfsQueue);
+		cout << endl;
+
 		if ((max_level > THRESH_LEVEL) || (qInd > MAX_QUEUE_SIZE)) {
+			cout << "Lvl: " << max_level << "/" << THRESH_LEVEL << "\t"
+				 << "Q: " << qInd << "/" << MAX_QUEUE_SIZE << endl;
 			path = "Unreachable";
 			return -1;
 		}
