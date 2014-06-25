@@ -3,7 +3,7 @@
 #include "verilated.h"
 #include "gaLib.h"
 
-#include "readGraph.h"
+#include "graphLib.h"
 
 rstIn_t gVarClass::resetInput = rstIn_t(CONST_NUM_INPUT_BITS, 'X');
 int_vec IsBranchLeaf(CONST_NUM_BRANCH, 0);
@@ -16,161 +16,6 @@ int gaIndiv_t::mem_alloc_cnt = 0;
 int state_t::mem_alloc_cnt = 0;
 //int Vtop::mem_alloc_cnt = 0;
 
-struct brGraph_t;
-struct bNode_t;
-struct bEdge_t;
-
-struct bEdge_t {
-	string startStr, endStr;
-	int bIndex;	
-	int startTop, endTop;
-
-	bEdge_t(int index_) : 
-		bIndex(index_){ };
-
-	bEdge_t(int index_, int start_, int end_) :
-		bIndex(index_), startTop(start_), endTop(end_) { };
-		
-	void printEdge() {
-		cout << "Edge " << bIndex
-			 << " Top " << startTop 
-			 << " End " << endTop << endl;
-	}
-
-	void addStartState(string state_) {
-	// TODO	
-	}
-
-	void addEndState(string state_) {
-	// TODO
-	}
-
-};
-
-struct bNode_t {
-	string state_val;
-
-	int bIndex;
-	int_vec outNodes;
-	int_vec outEdges;
-	int_vec inNodes;
-	int_vec inEdges;
-
-	bNode_t(int index_) :
-		bIndex(index_) {
-		outEdges = int_vec();
-		outNodes = int_vec();
-		inNodes = int_vec();
-		inEdges = int_vec();
-	}
-
-	void addOutEdge(int edge_index_, int node_index_) {
-		outNodes.push_back(node_index_);
-		outEdges.push_back(edge_index_);
-		if (outNodes.size() != outEdges.size()) {
-			cout << "AF " << outNodes.size() << " " << outEdges.size() << endl;
-			assert(0);
-		}
-	}
-
-	void addInEdge(int edge_index_, int node_index_) {
-		assert(inNodes.size() == inEdges.size());
-		inNodes.push_back(node_index_);
-		inEdges.push_back(edge_index_);
-	}
-};
-
-struct brGraph_t {
-	vector<bNode_t> bNodes;
-	vector<bEdge_t> bEdges;
-	int_vec nodeMap;
-	int_vec edgeMap;
-	int_vec branchType;
-	// 0 - None, 1 - Edge, 2 - Node, 3 - Both
-
-	brGraph_t() {
-		nodeMap = int_vec(CONST_NUM_BRANCH, -1);
-		edgeMap = int_vec(CONST_NUM_BRANCH, -1);
-		branchType = int_vec(CONST_NUM_BRANCH, 0);
-	}
-
-	int addEdge(int index_, int start_, int end_) {
-		assert(index_ < CONST_NUM_BRANCH);
-//		if (//(branchType[index_] & 0x01) && 
-//			(edgeMap[index_] == -1)) {
-			bEdge_t newEdge(index_, start_, end_);
-			bEdges.push_back(newEdge);
-			edgeMap[index_] = bEdges.size() - 1;
-
-			bNodes[nodeMap[start_]].addOutEdge(index_, end_);
-			bNodes[nodeMap[end_]].addInEdge(index_, start_);
-			return edgeMap[index_];
-//		}
-//		else
-//			return false;
-	}
-
-	int addNode(int index_) {
-		assert(index_ < CONST_NUM_BRANCH);
-		if (//(branchType[index_] & 0x02) && 
-			(nodeMap[index_] == -1)) {
-			bNode_t newNode(index_);
-			bNodes.push_back(newNode);
-			nodeMap[index_] = bNodes.size() - 1;
-		}
-		return nodeMap[index_];
-	}
-
-	bEdge_t* getEdge(int index_) {
-		int val = edgeMap[index_];
-		if (val == -1)
-			return NULL;
-		
-		return &bEdges[val];
-	}
-
-	bNode_t* getNode(int index_) {
-		int val = nodeMap[index_];
-		if (val == -1)
-			return NULL;
-		
-		return &bNodes[val];
-	}
-
-	void printGraph() {
-		
-		ofstream outFile;
-		char gName[100];
-
-		sprintf(gName, "%s.gv", benchCkt);
-		outFile.open(gName, ios::out);
-
-		if(!outFile) {
-			cout << "Unable to write graph into file " << gName << endl;
-			return;
-		}
-
-		outFile << "digraph " << benchCkt << "{" << endl;
-		for (vector<bNode_t>::iterator it = bNodes.begin();
-				it != bNodes.end(); ++it)    {
-			outFile << it->bIndex
-					<< " [label=\"" << it->bIndex
-					<< "\"];" << endl;
-		}
-
-		for (vector<bEdge_t>::iterator it = bEdges.begin();
-				it != bEdges.end(); ++it)    {
-			outFile << it->startTop << "->" << it->endTop 
-					<< " [label=\"" << it->bIndex << "\"];"
-					<< endl;
-		}
-
-		outFile << "}";
-		outFile.close();
-
-	}
-
-};
 class Stage1_Param {
 
 public:
@@ -274,13 +119,13 @@ void Stage1_GenerateVectors(Stage1_Param*);
 void readParam(Stage1_Param*);
 void readParam(Stage2_Param*);
 
-bool readTopNodes(graph&, brGraph_t&);
+bool readTopNodes(covGraph_t&, brGraph_t&);
 void getTarget(Stage2_Param*, int, set<int>&);
 int getPathBFS(brGraph_t*, int, int, string&);
 
 void readBranchGraph(brGraph_t&);
 void Stage2_GenerateVectors(Stage2_Param*);
-int getDominator(const graph&, const set<int>&);
+int getDominator(const covGraph_t&, const set<int>&);
 
 int AddVector2Branch(int, vecIn_t);
 int AddState2Branch(int, state_t*);
@@ -368,7 +213,7 @@ int main(int argc, char* argv[]) {
 
 //	delete paramObj1;	
 
-	graph covGraph;
+	covGraph_t covGraph;
 	brGraph_t branchGraph;
 	sprintf(covGraph.fName, "%s.graph", benchCkt);
 	readGraph(covGraph);
@@ -699,7 +544,7 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-int getDominator(const graph& branchGraph, const set<int>& unCovered) {
+int getDominator(const covGraph_t& branchGraph, const set<int>& unCovered) {
 	
 //	int root_index = 33;
 //	for (set<int>::iterator it = unCovered.begin(); it != unCovered.end(); ++it) {
@@ -1072,7 +917,7 @@ void getTarget(Stage2_Param* paramObj, int currEdge, set<int>& favorSet) {
 	}
 }
 
-bool readTopNodes(graph& graphCov, brGraph_t& branchGraph) {
+bool readTopNodes(covGraph_t& graphCov, brGraph_t& branchGraph) {
 
 	int_vec leafNodes;
 	int_vec topNodes;

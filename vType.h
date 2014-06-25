@@ -3,51 +3,6 @@
 
 #include "incl.h"
 
-//#if defined(__b01)
-//	#include "b01Int.h"
-//	#include "bench/b01/obj_dir/Vtop__Syms.h"
-//	#include "bench/b01/obj_dir/Vtop.h"
-//	#define benchCkt "b01"
-//	#define benchDir "bench/b01/"
-//	
-//#elif defined(__b06)
-//	#include "b06Int.h"
-//	#include "bench/b06/obj_dir/Vtop__Syms.h"
-//	#include "bench/b06/obj_dir/Vtop.h"
-//	#define benchCkt "b06"
-//	#define benchDir "bench/b06/"
-//
-//#elif defined(__b07)
-//	#include "b07Int.h"
-//	#include "bench/b07/obj_dir/Vtop__Syms.h"
-//	#include "bench/b07/obj_dir/Vtop.h"
-//	#define benchCkt "b07"
-//	#define benchDir "bench/b07/"
-//
-//#elif defined(__b10)
-//	#include "b10Int.h"
-//	#include "bench/b10/obj_dir/Vtop__Syms.h"
-//	#include "bench/b10/obj_dir/Vtop.h"
-//	#define benchCkt "b10"
-//	#define benchDir "bench/b10/"
-//
-//#elif defined(__b11)
-//	#include "b11Int.h"
-//	#include "bench/b11/obj_dir/Vtop__Syms.h"
-//	#include "bench/b11/obj_dir/Vtop.h"
-//	#define benchCkt "b11"
-//	#define benchDir "bench/b11/"
-//
-//#elif defined(__b12)
-//	#include "b12Int.h"
-//	#include "bench/b12/obj_dir/Vtop__Syms.h"
-//	#include "bench/b12/obj_dir/Vtop.h"
-//	#define benchCkt "b12"
-//	#define benchDir "bench/b12/"
-//	#define rstInput 1
-//
-//#endif
-
 using namespace std;
 
 // Data types
