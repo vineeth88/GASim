@@ -2,7 +2,6 @@
 #include "incl.h"
 #include "verilated.h"
 #include "gaLib.h"
-
 #include "graphLib.h"
 
 rstIn_t gVarClass::resetInput = rstIn_t(CONST_NUM_INPUT_BITS, 'X');
@@ -45,11 +44,6 @@ public:
 				stateList[st] = NULL;
 			}
 		}
-//		for(state_pVec_iter it = stateList.begin(); it != stateList.end(); ++it)
-//			if (*it) {
-//				delete *it;
-//				*it = NULL;
-//			}
 	}
 
 };
@@ -59,6 +53,7 @@ class Stage2_Param : public Stage1_Param {
 	public:
 
 	int MAX_ROUNDS;
+	int MAX_TRIES;
 
 	state_t *	startState;
 	Vtop *		cktVar;
@@ -120,13 +115,10 @@ void readParam(Stage1_Param*);
 void readParam(Stage2_Param*);
 
 bool readTopNodes(covGraph_t&, brGraph_t&);
-void getTarget(Stage2_Param*, int, set<int>&);
-int getPathBFS(brGraph_t*, int, int, string&);
-
 void readBranchGraph(brGraph_t&);
-void Stage2_GenerateVectors(Stage2_Param*);
-int getDominator(const covGraph_t&, const set<int>&);
 
+void Stage2_GenerateVectors(Stage2_Param*);
+int getPathBFS(brGraph_t*, int, int, string&);
 int AddVector2Branch(int, vecIn_t);
 int AddState2Branch(int, state_t*);
 
@@ -225,22 +217,20 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}		
 	
-	string tmpPath;
-	getPathBFS(&branchGraph, 33, 69, tmpPath);
-	//exit(0);
-	
 	vecIn_t TestVectorSet = paramObj1->inputVec;
 
 	cout << "Stage 2 " << endl << endl;
 	Stage2_Param *paramObj2 = new Stage2_Param(paramObj1);
 	paramObj2->inputVec = paramObj1->inputVec;
 	paramObj2->branchGraph = &branchGraph;
+
 	paramObj2->startState = paramObj1->stateList.back();
 	paramObj2->stateList = paramObj1->stateList;
 	paramObj1->stateList.clear();
+	
 	paramObj2->cktVar = new Vtop;
-
 	SimMultiCycle(paramObj2->cktVar, paramObj1->inputVec);
+
 	readParam(paramObj2);
 	
 	cout << "Last state reached at the end of Stage 1" << endl;
@@ -252,6 +242,7 @@ int main(int argc, char* argv[]) {
 	set<int> &unCovered = paramObj2->unCovered;
 	
 	int MAX_ROUNDS = paramObj2->MAX_ROUNDS;
+	BranchNumTries = int_vec(CONST_NUM_BRANCH, 0);
 	for (int num_round = 0; num_round < MAX_ROUNDS; ++num_round) {
 	
 	unCovered.clear();
@@ -262,14 +253,29 @@ int main(int argc, char* argv[]) {
 		else if ((branchHit[ind] == 0) && (IsBranchLeaf[ind])) {
 			bEdge_t* edge = branchGraph.getEdge(ind);
 			if (edge) {
-//				unCovered.insert(edge->startTop);
 				unCovered.insert(ind);
-				/* TODO!! - 05/30	*/
-			//	favorSet.insert(ind);
 			}
 		}
 	}
 	
+	/*	For hitting branch 86, 
+		1. Target and hit branch 67
+		2. Target and hit branch 68 next.
+		3. Target and hit branch 86.	
+		
+		1)	Either this can be read from a file.
+		2)	You cant target the same branch more than 10 times in a row 
+			unless its the only branch left, or if the paths of the other 
+			branches go through the targeted branch		*/
+
+//	#if defined(__b12)
+//		for (int nr = 97; nr < 103; nr++) {
+//			set<int>::iterator st = unCovered.find(nr);
+//			if (st != unCovered.end())
+//				unCovered.erase(st);
+//		}
+//	#endif
+
 	if (unCovered.size() == 0)
 		break;
 
@@ -295,10 +301,15 @@ int main(int argc, char* argv[]) {
 	string target_path = "Unreachable";
 	int target_lvl = (2 << 20);
 	int target_node = -1;
+	int target_tries = paramObj2->MAX_TRIES;
 
 	/*	- Find path from curr_node to all the start_nodes of the uncovered edges
 		- Find the uncovered edge with the shortest path
 		- Set the topNode(start_node) as the target_node */
+	cout << "Number of tries (of " << paramObj2->MAX_TRIES << ")" << endl;
+	printCnt(BranchNumTries);
+	cout << endl;
+
 	for (set<int>::iterator it = unCovered.begin(); it != unCovered.end(); ++it) {
 		string path;
 		int lvl = getPathBFS(&branchGraph, end_val, *it, path);
@@ -309,7 +320,7 @@ int main(int argc, char* argv[]) {
 			target_path = path;
 		}
 	}
-
+	
 	cout << "Target	: " << target_node << endl
 		 << "Level 	: " << target_lvl << endl
 		 << "Path 	: " << target_path << endl;
@@ -318,6 +329,7 @@ int main(int argc, char* argv[]) {
 	paramObj2->end_val = end_val;
 	
 	if (target_path.compare("Unreachable")) {
+		BranchNumTries[target_node]++;
 		int iter_val = end_val;
 		bNode_t* iter_node = branchGraph.getNode(iter_val);
 		assert(iter_node);
@@ -481,7 +493,7 @@ int main(int argc, char* argv[]) {
 		int max_num_paths = -1, max_path_index = -1;
 		if (nxtPaths.size() == 0) {
 			//PrintVectorSet(paramObj2->inputVec, true);
-			getDominator(covGraph, unCovered);
+			//getDominator(covGraph, unCovered);
 			assert(nxtPaths.size());
 		}
 
@@ -542,22 +554,6 @@ int main(int argc, char* argv[]) {
 	delete paramObj2;
 
 	return 0;
-}
-
-int getDominator(const covGraph_t& branchGraph, const set<int>& unCovered) {
-	
-//	int root_index = 33;
-//	for (set<int>::iterator it = unCovered.begin(); it != unCovered.end(); ++it) {
-//		
-//		int_vec currPath;
-//		int br = *it;
-//
-//		cout << "Path for " << *it << ": ";
-//		printVec(currPath);
-//		cout << endl;
-//	}
-//	
-//	return 0;
 }
 
 void Stage2_GenerateVectors(Stage2_Param* paramObj) {
@@ -823,7 +819,7 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 		bNode_t* curr = brGraph->getNode(front);
 		assert(curr);
 
-		cout << "F: " << front << endl;
+//		cout << "F: " << front << endl;
 		for (int eInd = 0; (uint) eInd < curr->outNodes.size(); ++eInd) {
 			int node_ = curr->outNodes[eInd];
 			
@@ -855,15 +851,15 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 				bfsQueue.push_back(node_);
 			}
 
-			cout << "Queued " << node_ 
-				 << " Level: " << tmpLevel
-				 << " Label: " << tmpLabel
-				 << " Max_Lvl: " << max_level << endl;
+//			cout << "Queued " << node_ 
+//				 << " Level: " << tmpLevel
+//				 << " Label: " << tmpLabel
+//				 << " Max_Lvl: " << max_level << endl;
 		}
 
-		cout << "Queue (" << bfsQueue.size() << ")" << endl;
-		printVec(bfsQueue);
-		cout << endl;
+//		cout << "Queue (" << bfsQueue.size() << ")" << endl;
+//		printVec(bfsQueue);
+//		cout << endl;
 
 		if ((max_level > THRESH_LEVEL) || (qInd > MAX_QUEUE_SIZE)) {
 			cout << "Lvl: " << max_level << "/" << THRESH_LEVEL << "\t"
@@ -876,45 +872,6 @@ int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 	
 	path = "Unreachable";
 	return -1;
-}
-
-
-
-//void getTarget(Stage2_Param* paramObj, int currEdge, vector<int>& favorSet, vector) {
-void getTarget(Stage2_Param* paramObj, int currEdge, set<int>& favorSet) {
-	
-	brGraph_t* branchGraph = paramObj->branchGraph;
-		
-	int edge_ind = branchGraph->edgeMap[currEdge];
-	bEdge_t* curr = &(branchGraph->bEdges[edge_ind]);
-	
-	int start_node = curr->startTop;
-	int end_node = curr->endTop;
-
-	int next_state = branchGraph->nodeMap[end_node];
-	if (next_state == -1) {
-		cout << "No data for " << end_node << endl;
-		return;
-	}
-
-	int_vec *reachable_nodes = &(branchGraph->bNodes[next_state].outNodes);
-	int_vec *out_edges = &(branchGraph->bNodes[next_state].outEdges);
-
-	for (int brInd = 0; (uint) brInd < out_edges->size(); ++brInd) {
-		int br = (*out_edges)[brInd];
-		cout << "Edge " << br;
-		if (paramObj->branchHit[br] == 0) {
-			favorSet.insert(br);
-//			favorSet.push_back(br);
-			cout << " not reached" << endl;
-		}
-		else {
-			cout << " reached" << endl;
-			if (br == currEdge)
-				favorSet.insert(br);
-//				favorSet.push_back(br);
-		}
-	}
 }
 
 bool readTopNodes(covGraph_t& graphCov, brGraph_t& branchGraph) {
@@ -1430,6 +1387,8 @@ void readParam(Stage2_Param* paramObj) {
 		paramObj->NUM_GEN = 4;
 		paramObj->POP_SIZE = 256;
 		paramObj->INDIV_LEN = 20;
+		paramObj->MAX_ROUNDS = 100;
+		paramObj->MAX_TRIES = 20;
 	}	
 	else {
 		while(paramIn) {
@@ -1487,6 +1446,19 @@ void readParam(Stage2_Param* paramObj) {
 				}
 				else 
 					paramObj->MAX_ROUNDS = 20;
+			}
+			else if (curr.find("MAX_TRIES") != string::npos) {
+				size_t ind = curr.find("=");
+				if (ind != string::npos) {
+					stringstream ss;
+					int val;
+					ss << curr.substr(ind+1);
+					ss >> val;
+					cout << "MAX_TRIES = " << val << endl;
+					paramObj->MAX_TRIES = val;
+				}
+				else 
+					paramObj->MAX_TRIES = 20;
 			}
 		}
 		cout << "Finished parsing " << paramObj->fName << endl;
