@@ -239,24 +239,27 @@ int main(int argc, char* argv[]) {
 	int_vec &branch_index = paramObj2->branch_index;
 	int_vec &branchHit = paramObj2->branchHit;
 	set<int> &favorSet = paramObj2->favorSet;
-	set<int> &unCovered = paramObj2->unCovered;
-	
+//	set<int> &unCovered = paramObj2->unCovered;
+
+	int_vec unCovered;
+	for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
+		if(IsDefaultBranch(br))
+			branchHit[br] = -5;
+		else if ((branchHit[br] == 0) && (IsBranchLeaf[br])) {
+			bEdge_t* edge = branchGraph.getEdge(br);
+			if (edge) 
+				unCovered.push_back(br);
+		}
+	}
+
 	int MAX_ROUNDS = paramObj2->MAX_ROUNDS;
 	BranchNumTries = int_vec(CONST_NUM_BRANCH, 0);
 	for (int num_round = 0; num_round < MAX_ROUNDS; ++num_round) {
 	
-	unCovered.clear();
+	cout << endl 
+		 << "ROUND : " << num_round << " / " << MAX_ROUNDS
+		 << endl << endl;
 	favorSet.clear();
-	for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
-		if(IsDefaultBranch(ind))
-			branchHit[ind] = -5;
-		else if ((branchHit[ind] == 0) && (IsBranchLeaf[ind])) {
-			bEdge_t* edge = branchGraph.getEdge(ind);
-			if (edge) {
-				unCovered.insert(ind);
-			}
-		}
-	}
 	
 	/*	For hitting branch 86, 
 		1. Target and hit branch 67
@@ -267,14 +270,6 @@ int main(int argc, char* argv[]) {
 		2)	You cant target the same branch more than 10 times in a row 
 			unless its the only branch left, or if the paths of the other 
 			branches go through the targeted branch		*/
-
-//	#if defined(__b12)
-//		for (int nr = 97; nr < 103; nr++) {
-//			set<int>::iterator st = unCovered.find(nr);
-//			if (st != unCovered.end())
-//				unCovered.erase(st);
-//		}
-//	#endif
 
 	if (unCovered.size() == 0)
 		break;
@@ -306,14 +301,20 @@ int main(int argc, char* argv[]) {
 	/*	- Find path from curr_node to all the start_nodes of the uncovered edges
 		- Find the uncovered edge with the shortest path
 		- Set the topNode(start_node) as the target_node */
+	#ifdef S2_DBG_PRINT_EXTRA
 	cout << "Number of tries (of " << paramObj2->MAX_TRIES << ")" << endl;
 	printCnt(BranchNumTries);
 	cout << endl;
+	#endif
 
-	for (set<int>::iterator it = unCovered.begin(); it != unCovered.end(); ++it) {
+	for (int_vec_iter it = unCovered.begin(); it != unCovered.end(); ++it) {
 		string path;
 		int lvl = getPathBFS(&branchGraph, end_val, *it, path);
-		cout << *it << ": " << path << endl;
+		#ifdef S2_DBG_PRINT
+		cout << end_val << "-> " 
+			 << *it << ": " 
+			 << path << endl;
+		#endif
 		if ((target_lvl > lvl) && (path.compare("Unreachable"))) {
 			target_lvl = lvl;
 			target_node = *it;
@@ -395,6 +396,29 @@ int main(int argc, char* argv[]) {
 		}
 
 		cout << endl << "END OF PATH" << endl;
+
+		for (int br = 0; br < unCovered.size(); ++br) {
+			if (unCovered[br] == target_node)
+				unCovered[br] = -100;
+			else if (branchHit[unCovered[br]])
+				unCovered[br] = -100;
+		}
+			
+		int_vec newVec;
+		for (int_vec_iter br = unCovered.begin(); br != unCovered.end(); ++br) {
+			if (*br != -100)
+				newVec.push_back(*br);
+		}
+		if (branchHit[target_node] == 0)
+			newVec.push_back(target_node);
+		
+		unCovered.clear();
+		unCovered = newVec;
+		newVec.clear();
+
+		cout << "unCovered: " << endl;
+		printVec(unCovered);
+		cout << endl;
 	}
 	else {
 		cout << endl
@@ -470,7 +494,7 @@ int main(int argc, char* argv[]) {
 				- Find the uncovered edge with the shortest path
 				- Set the topNode(start_node) as the target_node */
 			int num_paths;
-			for (set<int>::iterator it = unCovered.begin(); it != unCovered.end(); ++it) {
+			for (int_vec_iter it = unCovered.begin(); it != unCovered.end(); ++it) {
 				string path;
 				int lvl = getPathBFS(&branchGraph, end_val, *it, path);
 				cout << *it << ": " << path << endl;
@@ -540,6 +564,8 @@ int main(int argc, char* argv[]) {
 		cout << " * * * * * * * * * * * * * * * * * * * * " << endl << endl;
 	}
 	}
+
+	#ifdef S2_DBG_PRINT
 	int i = 0;
 	for (state_pVec_iter st = paramObj2->stateList.begin();
 			st != paramObj2->stateList.end(); ++st, ++i) {
@@ -548,8 +574,15 @@ int main(int argc, char* argv[]) {
 		(*st)->printState(1);
 		cout << endl << endl;
 	}
+	#endif
+
 	PrintVectorSet(paramObj2->inputVec, true);
 	
+	cout << endl
+		 << "Memory allocation details: " << endl
+		 << "gaIndiv_t: " << gaIndiv_t::mem_alloc_cnt << endl
+		 << "state_t: " << state_t::mem_alloc_cnt << endl;
+
 	exit(0);
 	delete paramObj2;
 
@@ -558,7 +591,8 @@ int main(int argc, char* argv[]) {
 
 void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 
-	cout << "GA Stage 2: " << endl
+	cout << endl 
+		 << "GA Stage 2: " << endl
 		 << "Previous Coverage: " << endl;
 	printCnt(paramObj->branchHit);
 	cout << endl;
@@ -588,12 +622,14 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 	printCktState(cktVar);
 	ResetCounters(cktVar);
 
+	#ifdef S2_DBG_PRINT
 	for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
 		cout << "Branch " << br << ":\t " << BranchInputVec[br] 
 			 //<< "\t " << BranchNumTries[br]
 			 << endl << BranchStateVal[br] << endl;
 	}
 	cout << endl;
+	#endif
 
 	cout << "Elements in favorSet before = { ";
 	printSet(paramObj->favorSet);
@@ -637,9 +673,10 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 			
 			ResetCounters(cktVar);
 			gaIndiv_t* indiv = stage2Pop.indiv_vec[ind];
+			#if defined(__b12)
 			for (int x = 0; x < indiv->input_vec.length(); x += 5) 
 				indiv->input_vec[x] = '0';
-
+			#endif
 			indiv->simCkt(cktVar);
 
 			int_vec state_fit_vec;
@@ -704,15 +741,19 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 
 				state_fit_vec.push_back(state_fit);
 				if (exit_state) {
+					#ifdef S2_DBG_PRINT
 					cout << branch_val << " reached in " << state_fit_vec.size() << " vectors" << endl;
+					#endif
 					break;
 				}
 
 			}
 
+			#ifdef S2_DBG_PRINT
 			cout << "Fitness: ";
 			printVec(state_fit_vec);
 			cout << endl;
+			#endif
 
 			indiv->fitness = 0;			
 			int max_ind = -1, max_fit = (2 << 20);
@@ -737,10 +778,12 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 			if (curr_gen_max_fit <= indiv->fitness)
 				curr_gen_max_fit = indiv->fitness;
 			
+			#ifdef S2_DBG_PRINT
 			cout << "Fitness(" << indiv->index << "): " 
 				 << indiv->fitness << " : " 
 				 << indiv->max_index + 1 << " vectors " 
 				 << endl << endl;
+		 	#endif
 		}	
 		
 		cout << "Max: " << curr_gen_max_fit
@@ -783,22 +826,30 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 	paramObj->branch_index = paramObj->stateList.back()->branch_index;
 	for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind)
 		branchHit[ind] += lastBranchHit[ind];
+	#ifdef S2_DBG_PRINT
+	#ifdef S2_DBG_PRINT_EXTRA
 	printCnt(lastBranchHit);
+	#endif
 	printCnt(paramObj->branchHit);
+	#endif
 
 	for( set<int>::iterator br = favorSet.begin(); br != favorSet.end(); ++br) {
 		if (lastBranchHit[*br] != 0)
 			favorSet.erase(*br);
 	}
+	#ifdef S2_DBG_PRINT
 	cout << "Elements in favorSet after = ";
 	printSet(paramObj->favorSet);
 	cout << endl;
+	#endif
 
 }
 
 int getPathBFS(brGraph_t* brGraph, int start, int target, string& path) {
 	
+	#ifdef S2_DBG_PRINT
 	cout << "Finding path from " << start << " -> " << target << endl;
+	#endif
 	map<int, string> label;
 	map<int, int> level;
 	
