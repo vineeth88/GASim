@@ -116,7 +116,16 @@ string state_t::operator[] (int index_) {
 }
 
 void state_t::printState (bool full_) {
-    cout << state_val << endl;
+    cout
+		<< state_val.substr(0,4)	<< " "
+		<< state_val.substr(4,1)	<< " "
+		<< state_val.substr(5,1)	<< " "
+		<< state_val.substr(6,1)	<< " "
+		<< state_val.substr(7,1)	<< " "
+		<< state_val.substr(8,4)	<< " "
+		<< state_val.substr(12,1)	<< " "
+		<< state_val.substr(13,1)	<< " "
+		<< endl;
 
 	for (vector<int>::iterator it = branch_index.begin();
 			it != branch_index.end(); ++it)

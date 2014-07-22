@@ -24,6 +24,7 @@ public:
 	int 	NUM_INDIV, INDIV_LEN;
 	int 	NUM_TOP_INDIV;
 	int 	NUM_GEN, POP_SIZE;
+	int 	MAX_ROUNDS;
 
 	vecIn_t			inputVec;
 	int_vec			branchHit;
@@ -1023,7 +1024,8 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 	int VEC_LEN	= paramObj->INDIV_LEN / CONST_NUM_INPUT_BITS;
 	int NUM_INDIV = paramObj->NUM_INDIV;
 	int TOP_INDIV = paramObj->NUM_TOP_INDIV;
-	
+	int MAX_ROUNDS = paramObj->MAX_ROUNDS;
+
 	double WT_FIT_STATE = 0.7;
 	double WT_FIT_BRANCH = 0.3;
 	int WT_FIT_COV = 500;
@@ -1056,16 +1058,13 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 		of start states and string of random vectors	*/
 	stage0Pop.initPopulation(startPool);
 
-	stateMap_t currStateMap;
+	stateMap_t currStateMap, glStateMap;
 	currStateMap.clear();
 	int prevMaxCov = 0;
 
 	bool gaTerminate = false;
 	for (int gen = 0; !gaTerminate && (gen < NUM_GEN); ++gen) {
 		
-//		cout << "States allocated: " << state_t::mem_alloc_cnt << endl;
-//		cout << "Indiv allocated: " << gaIndiv_t::mem_alloc_cnt << endl;
-
 		cout << "GEN " << gen << endl << endl;
 		int_vec currBranchCov(CONST_NUM_BRANCH, 0);
 
@@ -1089,14 +1088,14 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 				retVal_t ret = currStateMap.insert(make_pair(hash_val_, curr));
 				
 				curr->hit_count = 1;
-				/*	If the key for the state is present 
-					=>	New state was not found
-					If the value for the key = NULL	
-						=> The state was found in the previous cycle
-						Therefore, set the new found state as the value for that key.
-					Else
-						=> The state was found in this cycle
-						Therefore, just increment the count of that state		*/
+			/*	If the key for the state is present 
+				=>	New state was not found
+				If the value for the key = NULL	
+				=> 	The state was found in the previous cycle
+					Therefore, set the new found state as the value for that key.
+				Else
+					=> The state was found in this cycle
+					Therefore, just increment the count of that state		*/
 				if (ret.second == false) {
 					if (ret.first->second)
 						(ret.first->second)->hit_count++;
@@ -1140,11 +1139,6 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 		}
 		cout << endl;	
 
-//			for (int_vec_iter it = maxInd.begin();
-//					it != maxInd.end(); ++it)
-//				stage0Pop.indiv_vec[*it]->printIndiv(1);
-//			cout << endl;
-
 		/* Compute Fitness	*/
 		for (int ind = 0; ind < POP_SIZE; ++ind) {
 
@@ -1164,11 +1158,6 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 				= (fitness_cov * WT_FIT_COV) 
 				+ (fitness_branch * WT_FIT_BRANCH)
 				+ (fitness_state * WT_FIT_STATE);
-//				cout << "Fitness (" << ind << ") " << indiv->fitness 
-//					 << " [" << fitness_cov 
-//					 << ", " << fitness_branch
-//					 << ", " << fitness_state << "]" << endl 
-//					 << endl;
 		}	
 		
 
@@ -1181,14 +1170,9 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 
 		if (!gaTerminate) {
 
-//				cout << "States found " << gen << endl;
 			for (stateMap_iter st = currStateMap.begin(); 
-					st != currStateMap.end(); ++st) {
-//					cout << (st->first) << endl;
+					st != currStateMap.end(); ++st) 
 				currStateMap[st->first] = NULL;
-//					(st->second) = NULL;
-			}
-//			DisplayMap(currStateMap);
 
 			stage0Pop.gaEvolve();
 			
@@ -1201,25 +1185,250 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 		
 	/* Mine for interesting individuals and states 	*/
 	cout << "States reached after Round 0" << endl;
-//	DisplayMap(currStateMap);
-//	cout << endl;
 
 	cout << "States allocated: " << state_t::mem_alloc_cnt << endl;
 
+	/* N.logN for sort instead of N.TOP_INDIV for finding TOP_INDIV top indivs*/
 	std::sort(stage0Pop.indiv_vec.begin(), stage0Pop.indiv_vec.end(), compCoverage);
-//		cout << "Population after Round 0" << endl;
-//		int pInd = 0;
-//		for (gaIndiv_pVec_iter indiv = stage0Pop.indiv_vec.begin();
-//				indiv != stage0Pop.indiv_vec.end(); ++indiv) {
-//			cout << pInd << endl;
-//			(*indiv)->printIndiv(0);
-//			cout << (*indiv)->num_branch << " branches with "
-//				 << (*indiv)->max_index + 1 << " vectors" << endl;
-//			//getchar();
-//			pInd++;
-//		}
 	
+	/* ***** ROUND 1:MAX_ROUNDS	***** */
+
+//	int NUM_TOP_INDIV = 4
+//	vecIn_t	startVec[NUM_TOP_INDIV];
+//	startPool = state_pVec(NUM_TOP_INDIV, NULL);
+
+//	typedef map<keyVal_t, int> stateIndMap_t;
+//	typedef pair<stateIndMap_t::iterator, bool> retPair_t;
+//
+//	stateIndMap_t stIndMap;
+
+	/*	Need to add the final state to statePool only if its unique	
+		If not unique, the indiv with greater coverage should be added
+		If all coverages are same, the indiv with lesser max_index should be added
+	*/
+
+	vecIn_t startVec;
+	startPool.clear();
+
 	gaIndiv_t *indiv = stage0Pop.indiv_vec[0];
+
+	for (int st = 0; st <= indiv->max_index; ++st) {	
+		state_t *curr = indiv->state_list[st];
+		keyVal_t hash_val_ = curr->getHash();
+		glStateMap.insert(make_pair(hash_val_, curr));
+
+		for (int_vec_iter bt = curr->branch_index.begin();
+				bt != curr->branch_index.end(); ++bt)
+			branch_counters[*bt]++;
+
+	}
+	state_t* st = indiv->state_list[indiv->max_index];
+	startVec = indiv->input_vec.substr(0,CONST_NUM_INPUT_BITS*(indiv->max_index+1));
+	startPool.push_back(st);
+	
+	cout << "After Round 0: " << endl;
+	st->printState();
+	cout << " --------------- " << endl;
+	
+	printCnt(branch_counters);
+	cout << " --------------- " << endl;
+
+	bool Rnd_terminate = false;
+	int WT_NEW_BRANCH = 100;
+
+	for (int round = 1; round < MAX_ROUNDS && !Rnd_terminate; ++round) {
+		
+		gaPopulation_t stage0Pop(POP_SIZE, VEC_LEN);
+		/*	Init population with one of the states in the pool 
+			of start states and string of random vectors	*/
+		stage0Pop.initPopulation(startPool);
+
+		stateMap_t currStateMap;
+		//stateMap_t currStateMap = glStateMap;
+		int prevMaxCov = 0;
+
+		bool gaTerminate = false;
+		for (int gen = 0; !gaTerminate && (gen < NUM_GEN); ++gen) {
+			
+			cout << "GEN " << gen << endl << endl;
+
+			bool improv_cov = false; 
+			bool new_state = false;
+
+			int maxCov = 0, avgCov = 0;
+			int_vec maxInd;
+
+			for (int ind = 0; ind < POP_SIZE; ++ind) {
+				
+				ResetCounters(cktVar);
+				gaIndiv_t* indiv = stage0Pop.indiv_vec[ind];
+				indiv->simCkt(cktVar);
+
+				/* Add states to stateMap	*/
+				for (state_pVec_iter st = indiv->state_list.begin(); 
+						st != indiv->state_list.end(); ++st) {
+					state_t *curr = *st;
+					keyVal_t hash_val_ = curr->getHash();
+					retVal_t ret = currStateMap.insert(make_pair(hash_val_, curr));
+					
+					curr->hit_count = 1;
+					/*	If the key for the state is present 
+						=>	New state was not found
+						If the value for the key = NULL	
+							=> The state was found in the previous cycle
+							Therefore, set the new found state as the value for that key.
+						Else
+							=> The state was found in this cycle
+							Therefore, just increment the count of that state		*/
+					if (ret.second == false) {
+						if (ret.first->second)
+							(ret.first->second)->hit_count++;
+						else 
+							(ret.first->second) = curr;
+					}
+					else {
+						new_state = true;
+					}
+				}
+
+				/* Computing max and avg branch coverage */
+				if (maxCov < indiv->num_branch)
+					maxCov = indiv->num_branch;
+				
+				avgCov += indiv->num_branch;
+
+			}
+			
+			cout << "Avg Coverage: " << (double)avgCov / (double)POP_SIZE << endl
+				 << "Max Coverage: " << maxCov << endl;
+
+			avgCov = (fitness_t)((double)avgCov / (double)POP_SIZE + 0.5);
+			improv_cov = (maxCov >= prevMaxCov);
+
+			/* Compute Fitness	*/
+			for (int ind = 0; ind < POP_SIZE; ++ind) {
+
+				gaIndiv_t *indiv = stage0Pop.indiv_vec[ind];
+
+				/* Fitness for #branches covered */
+				fitness_t fitness_cov = avgCov - indiv->num_branch;
+
+				/* Fitness for branch coverage	*/
+				fitness_t fitness_branch = 0;
+				for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
+					if (indiv->branch_cov[br] && (branch_counters[br] == 0))
+						fitness_branch -= WT_NEW_BRANCH;
+				}
+
+				/* Fitness for states reached 	*/
+				fitness_t fitness_state = 0;
+
+				/* Combining all fitness values	*/
+				indiv->fitness 
+					= (fitness_cov * WT_FIT_COV) 
+					+ (fitness_branch * WT_FIT_BRANCH)
+					+ (fitness_state * WT_FIT_STATE);
+			}	
+			
+
+			/* Terminate GA Condition:
+				- gen == NUM_GEN
+				- coverage[gen] <= coverage[gen-1]
+				- no new states reached	*/
+			
+			gaTerminate = (gen == NUM_GEN - 1) | (!improv_cov) | (!new_state);
+
+			if (!gaTerminate) {
+
+				for (stateMap_iter st = currStateMap.begin(); 
+						st != currStateMap.end(); ++st) 
+					currStateMap[st->first] = NULL;
+
+				stage0Pop.gaEvolve();
+				
+				prevMaxCov = maxCov;
+			}
+			else {
+				cout << "Terminating after gen " << gen << endl;
+				if (prevMaxCov < maxCov)
+					prevMaxCov = maxCov;
+			}
+
+		}
+			
+		/* N.logN for sort instead of N.TOP_INDIV for finding TOP_INDIV top indivs*/
+		std::sort(stage0Pop.indiv_vec.begin(), stage0Pop.indiv_vec.end(), compCoverage);
+	
+		gaIndiv_t *indiv = stage0Pop.indiv_vec[0];
+		cout << "Fittest indiv after round " << round << endl;
+		indiv->printIndiv(1);
+
+		int_vec curr_branch_cnt (CONST_NUM_BRANCH, 0);
+		bool new_start_state = true;
+		for (int st = 0; st <= indiv->max_index; ++st) {	
+			state_t *curr = indiv->state_list[st];
+			keyVal_t hash_val_ = curr->getHash();
+			retVal_t ret = glStateMap.insert(make_pair(hash_val_, curr));
+
+			if (ret.second == true) {
+				new_start_state = true;
+				indiv->state_list[st] = NULL;
+			}
+			else {
+				state_t* tmp = ret.first->second;
+				if (tmp)
+					tmp->hit_count++;
+				else
+					glStateMap[ret.first->first] = curr;
+			}
+			for (int_vec_iter bt = curr->branch_index.begin();
+					bt != curr->branch_index.end(); ++bt)
+				curr_branch_cnt[*bt]++;
+
+		}
+
+		bool new_branch_ = false;
+		for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
+			if ((curr_branch_cnt[br]) && (branch_counters[br] == 0))
+				new_branch_ = true;
+			branch_counters[br] += curr_branch_cnt[br];
+		}
+
+		Rnd_terminate = new_start_state || new_branch_ || (round < MAX_ROUNDS-1);
+
+		startVec += indiv->input_vec.substr(0,CONST_NUM_INPUT_BITS*(indiv->max_index+1));
+
+		for (state_pVec_iter st = startPool.begin(); st != startPool.end(); ++st)
+			if (*st == NULL) {
+				delete *st;
+				*st = NULL;
+			}
+
+		startPool.clear();
+		state_t* st = indiv->state_list[indiv->max_index];
+		indiv->state_list[indiv->max_index] = NULL;
+		
+		startPool.push_back(st);
+
+		cout << "After Round " << round << " : " << endl;
+		st->printState();
+		cout << " --------------- " << endl;
+		
+		printCnt(branch_counters);
+		cout << " --------------- " << endl;
+	}		
+
+//	if (pst->getHash().compare(st->getHash()) == 0)
+	rstState->setCktState(cktVar);
+	SimMultiCycle(cktVar, startVec);
+	int_vec branch_cov;
+	GetBranchCounters(cktVar, branch_cov);
+	
+	PrintVectorSet(startVec);
+	cout << "Final coverage: " << endl;
+	printCnt(branch_cov);
+
+	exit(0);
 
 	paramObj->inputVec = (indiv->input_vec).substr(0,CONST_NUM_INPUT_BITS*(indiv->max_index+1));
 	paramObj->branchHit = int_vec(CONST_NUM_BRANCH, 0);
@@ -1352,12 +1561,13 @@ void readParam(Stage1_Param* paramObj) {
 			 << "NUM_GEN_0 	: 4 generations" << endl
 			 << "POP_SIZE_0	: 256 individuals" << endl
 			 << "INDIV_LEN_0: 20 bits" << endl
-			 << "NUM_INDIV_0: 2 rounds" << endl;
+			 << "MAX_ROUNDS_0: 10 rounds" << endl;
 
 		paramObj->NUM_GEN = 4;
 		paramObj->POP_SIZE = 256;
 		paramObj->INDIV_LEN = 20;
 		paramObj->NUM_INDIV = 2;
+		paramObj->MAX_ROUNDS = 10;
 	}	
 	else {
 		while(paramIn) {
@@ -1415,6 +1625,19 @@ void readParam(Stage1_Param* paramObj) {
 				}
 				else 
 					paramObj->NUM_INDIV = 2;
+			}
+			else if (curr.find("MAX_ROUNDS_0") != string::npos) {
+				size_t ind = curr.find("=");
+				if (ind != string::npos) {
+					stringstream ss;
+					int val;
+					ss << curr.substr(ind+1);
+					ss >> val;
+					cout << "MAX_ROUNDS = " << val << endl;
+					paramObj->MAX_ROUNDS = val;
+				}
+				else 
+					paramObj->MAX_ROUNDS = 10;
 			}
 
 		}
