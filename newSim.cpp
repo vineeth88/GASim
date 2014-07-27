@@ -147,7 +147,7 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 	SimMultiCycle(cktVar, 0);
 	for (int br = 0; br < CONST_NUM_BRANCH; ++br)
 		if (GetCoverage(cktVar, br))
-			branch_counters[br] = 5;
+			branch_counters[br] = -5;
 
 	state_t *rstState;
 	rstState = new state_t(cktVar, 0);
@@ -343,7 +343,13 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 	bool Rnd_terminate = false;
 	int WT_NEW_BRANCH = 100;
 
-	for (int round = 1; round < MAX_ROUNDS && !Rnd_terminate; ++round) {
+	bool all_done = true;
+	for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
+		if (!IsDefaultBranch(br) && (branch_counters[br] == 0))
+			all_done = false;
+	}
+		
+	for (int round = 1; !all_done && round < MAX_ROUNDS && !Rnd_terminate; ++round) {
 		
 		gaPopulation_t stage0Pop(POP_SIZE, VEC_LEN);
 		/*	Init population with one of the states in the pool 
@@ -471,28 +477,32 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 		indiv->printIndiv(1);
 
 		int_vec curr_branch_cnt (CONST_NUM_BRANCH, 0);
-		bool new_start_state = true;
+		bool new_start_state = false;
 		for (int st = 0; st <= indiv->max_index; ++st) {	
 			state_t *curr = indiv->state_list[st];
 			keyVal_t hash_val_ = curr->getHash();
 			retVal_t ret = glStateMap.insert(make_pair(hash_val_, curr));
 
 			if (ret.second == true) {
+				cout << "X";
 				new_start_state = true;
-				indiv->state_list[st] = NULL;
+//				indiv->state_list[st] = NULL;
 			}
 			else {
-				state_t* tmp = ret.first->second;
-				if (tmp)
-					tmp->hit_count++;
-				else
-					glStateMap[ret.first->first] = curr;
+				cout << "-";
+//				state_t* tmp = ret.first->second;
+//				if (tmp)
+//					tmp->hit_count++;
+//				else
+//					glStateMap[ret.first->first] = curr;
 			}
 			for (int_vec_iter bt = curr->branch_index.begin();
 					bt != curr->branch_index.end(); ++bt)
 				curr_branch_cnt[*bt]++;
 
 		}
+		
+		cout << endl;
 
 		bool new_branch_ = false;
 		for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
@@ -500,9 +510,17 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 				new_branch_ = true;
 			branch_counters[br] += curr_branch_cnt[br];
 		}
+	
+		bool all_done_2 = true;
+		for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
+			if (!IsDefaultBranch(br) && (branch_counters[br] == 0)) {
+				all_done_2 = false;
+				break;
+			}
+		}
 
-		Rnd_terminate = new_start_state || new_branch_ || (round < MAX_ROUNDS-1);
-
+		Rnd_terminate = !(new_start_state || new_branch_) || (round == MAX_ROUNDS-1) || (all_done_2);
+		
 		startVec += indiv->input_vec.substr(0,CONST_NUM_INPUT_BITS*(indiv->max_index+1));
 
 		for (state_pVec_iter st = startPool.begin(); st != startPool.end(); ++st)
@@ -523,6 +541,9 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 		
 		printCnt(branch_counters);
 		cout << " --------------- " << endl;
+
+		if (Rnd_terminate)
+			cout << "Exiting after round " << round << endl;
 	}		
 
 //	if (pst->getHash().compare(st->getHash()) == 0)
@@ -537,24 +558,9 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 
 	exit(0);
 
-	paramObj->inputVec = (indiv->input_vec).substr(0,CONST_NUM_INPUT_BITS*(indiv->max_index+1));
-	paramObj->branchHit = int_vec(CONST_NUM_BRANCH, 0);
-	SimMultiCycle(cktVar,0);
-	GetBranchCounters(cktVar, paramObj->branchHit);
-	paramObj->stateList = state_pVec(indiv->max_index+1, NULL);
-	for (int ind = 0; ind <= indiv->max_index; ++ind) {
-		state_t *st = indiv->state_list[ind];
-//		if (st == NULL) {
-//			cout << "NULL state found at " << ind << endl;
-//			assert(0);
-//		}
-		for (int_vec_iter it = st->branch_index.begin();
-				it != st->branch_index.end(); ++it)
-			paramObj->branchHit[*it]++;
-		//paramObj->stateList[ind] = new state_t(*indiv->state_list[ind]);
-		paramObj->stateList[ind] = indiv->state_list[ind];
-		indiv->state_list[ind] = NULL;
-	}
+	paramObj->inputVec = startVec;
+	paramObj->branchHit = branch_cov;
+	paramObj->stateList = state_pVec(startVec.size(), NULL);
 
 	cout << "Branches covered after Stage 1: " << endl;
 	printCnt(paramObj->branchHit);

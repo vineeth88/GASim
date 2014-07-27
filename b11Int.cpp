@@ -144,7 +144,6 @@ void state_t::setCktState(Vtop* top) {
 
 }
 
-// END of work - 04/13
 // TODO : Need to work on CONST_NUM_STATE_BITS & CONST_NUM_CTRL_BITS
 
 // String -> Integer values
@@ -159,8 +158,6 @@ void set_input(Vtop *top, const vecIn_t& input)
 	}
 	top->stbi = input[6] - 48;
 
-//	cout << (int) top->x_in << " : " 
-//		 << (int) top->stbi << endl;
 }
 
 void RandomVecIn(vecIn_t& vecIn)
@@ -259,7 +256,8 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
         main_time++;
         ToggleClk(top);
     }
-   	
+   
+  	#ifdef b11_branch6_bg
 	if (GetCoverage(top, 7)) {
 		ss 	<< vecIn << " hit branch 7" << endl; 
 		ss 	<< (int) top->v__DOT__r_in	<< " "
@@ -269,6 +267,7 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
 			<< endl;
 		cout << ss.str() << endl;
 	}
+	#endif
 }
 
 int GetCoverage(const Vtop* top, bool printCnt) {
