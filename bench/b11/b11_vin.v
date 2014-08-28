@@ -69,7 +69,7 @@ begin
                 cont1 = 1'b0;
                 x_out = 1'b0;
         end
-        else
+        else	// 32
         begin
                 case (stato)
                         `s_reset:	// 1

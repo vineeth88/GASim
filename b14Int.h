@@ -1,23 +1,23 @@
-#ifndef B11_INT_H
-#define B11_INT_H
+#ifndef B14_INT_H
+#define B14_INT_H
 
 // Std Include
 #include "incl.h"
 
 // Verilator Include
 #include "verilated.h"
-#include "bench/b11/obj_dir/Vtop__Syms.h"
-#include "bench/b11/obj_dir/Vtop.h"
+#include "bench/b14/obj_dir/Vtop__Syms.h"
+#include "bench/b14/obj_dir/Vtop.h"
 
 // User Defined Datatypes
 #include "vType.h"
 
-const int CONST_NUM_INPUT = 2;
-const int CONST_NUM_INPUT_BITS = 7;
-const int CONST_NUM_BRANCH = 33;
-const int CONST_NUM_VARS = 4;
-const int CONST_NUM_STATE_BITS = 16 + 32;
-const int CONST_NUM_CTRL_BITS = 16 + 32;
+const int CONST_NUM_INPUT = 1;
+const int CONST_NUM_INPUT_BITS = 32;
+const int CONST_NUM_BRANCH = 211;
+const int CONST_NUM_VARS = 19;
+const int CONST_NUM_STATE_BITS = 398;
+const int CONST_NUM_CTRL_BITS = 270;
 
 void set_input(Vtop*, const vecIn_t&);
 void RandomVecIn(vecIn_t&);
@@ -45,7 +45,16 @@ void printCktState(Vtop*);
 inline
 bool IsDefaultBranch(const int i)
 {
-    return ((i == 20) || (i == 31));	 // unreachable & default branch
+    return ((i == 80) || (i == 95) || 
+			(i == 17) || (i == 21) ||
+			(i == 47) || (i == 191) ||
+			(i == 105) || (i == 115) || 
+			(i == 125) || (i == 135) || 
+			(i == 145) || (i == 155) || 
+			(i == 165) || (i == 175) || 
+			(i == 185) || (i == 194) || 
+			(i == 199)); 
+			// default branches
 }
 
 // Circuit Simulation Functions
@@ -76,4 +85,4 @@ void ToggleClk(Vtop *top)
 }
 
 
-#endif	// B11_INT_H
+#endif	// B14_INT_H

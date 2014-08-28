@@ -1,0 +1,82 @@
+
+.ic_en(ic_en),
+.icqmem_cycstb_i(icqmem_cycstb_i),
+.icqmem_ci_i(icqmem_ci_i),
+.tagcomp_miss(tagcomp_miss),
+.biudata_valid(icbiu_ack_i),
+.biudata_error(icbiu_err_i),
+
+10:
+ic_en = 1, icqmem_cycstb_i = 1, icqmem_ci_i = 0, tagcomp_miss = 0, biudata_valid = 0, biudata_error = 0
+
+11:
+ic_en = 1, icqmem_cycstb_i = 0, icqmem_ci_i = 1, tagcomp_miss = X, biudata_valid = 0, biudata_error = 0, hitmiss_eval = 0, 
+
+input				ic_en;
+input				icqmem_cycstb_i;
+input				icqmem_ci_i;
+input				tagcomp_miss;
+input				biudata_valid;
+input				biudata_error;
+input	[31:0]			start_addr;
+
+reg				hitmiss_eval;
+reg				load;
+reg				cache_inhibit;
+
+Branches not reached : 0, 1, 10, 11
+
+Branch 10:
+!(	(!ic_en) ||	
+	(hitmiss_eval & !icqmem_cycstb_i) || 
+	(biudata_error) || 
+	(cache_inhibit & biudata_valid)) 
+&&
+!(tagcomp_miss & biudata_valid)
+&&
+(!tagcomp_miss & !icqmem_ci_i)			
+
+ic_en								1
+!hitmiss_eval || icqmem_cycstb_i	1
+!biudata_error						1
+!cache_inhibit || !biudata_valid 	1	
+!tagcomp_miss || !biudata_valid 	1
+!tagcomp_miss & !icqmem_ci_i		1
+
+ic_en = 1, biudata_error = 0, tagcomp_miss = 0, icqmem_ci_i = 0, biudata_valid = 0, icqmem_cycstb_i = 1
+
+Branch 11:
+!(	(!ic_en) ||	
+	(hitmiss_eval & !icqmem_cycstb_i) || 
+	(biudata_error) || 
+	(cache_inhibit & biudata_valid)) 
+&&
+!(tagcomp_miss & biudata_valid)
+&&
+!(!tagcomp_miss & !icqmem_ci_i)			
+&&
+(!icqmem_cycstb_i)
+
+ic_en								1
+!hitmiss_eval || icqmem_cycstb_i	1
+!biudata_error						1
+!cache_inhibit || !biudata_valid 	1
+!tagcomp_miss || !biudata_valid 	1
+tagcomp_miss || icqmem_ci_i			1	
+!icqmem_cycstb_i					1
+
+ic_en = 1, hitmiss_eval = 0, biudata_error = 0, icqmem_cycstb_i = 0, biudata_valid = 0, icqmem_ci_i = 1
+
+Assignments for hitmiss_eval before state 13
+12, 3
+
+2:	hitmiss_eval <= #1 1'b0;
+3:	hitmiss_eval <= #1 1'b1;
+4:	hitmiss_eval <= #1 1'b0;
+8:	hitmiss_eval <= #1 1'b0;
+9:	hitmiss_eval <= #1 1'b0;
+11:	hitmiss_eval <= #1 1'b0;
+12:	hitmiss_eval <= #1 1'b0;
+15:	hitmiss_eval <= #1 1'b0;
+
+

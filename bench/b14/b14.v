@@ -132,6 +132,7 @@ always @(posedge clock or posedge reset)
             begin
             process_1_IR = -process_1_IR;   
             end
+		/* verilator lint_off WIDTH	*/
          process_1_mf = process_1_IR /  /* VHDL ** operator */ (2**27) % 4;   
          process_1_df = process_1_IR /  /* VHDL ** operator */ (2**24) %  /* VHDL ** operator */ (2**3);
          process_1_ff = process_1_IR /  /* VHDL ** operator */ (2**19) %  /* VHDL ** operator */ (2**4);   
@@ -139,6 +140,7 @@ always @(posedge clock or posedge reset)
          process_1_tail = process_1_IR %  /* VHDL ** operator */ 2**20;   
          process_1_reg3 = process_1_reg3 %  /* VHDL ** operator */ (2**29) + 8;   
          process_1_s = process_1_IR /  /* VHDL ** operator */ (2**29) % 4;   
+		 /* verilator lint_off WIDTH */
          case (process_1_s)
          0:
             begin
@@ -1044,7 +1046,7 @@ always @(posedge clock or posedge reset)
        /* VHDL ** operator */ 2**20;   
                   end
                endcase
-               addr <= process_1_m % 2 * 20;   
+               addr <= process_1_m % 2**20;   
 //  addr <= m;
 //  removed (!)fs020699
                wr <= 1'b 1;   

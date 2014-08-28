@@ -1,4 +1,4 @@
-BENCH = b11
+BENCH = b14
 
 DEFINE_BENCH = -D__${BENCH}
 BENCH_DIR = ./bench/${BENCH}/obj_dir
@@ -24,10 +24,10 @@ TARGET_MAIN = ${BENCH}TestSim
 
 OBJS_GEN = ${BENCH}Int.o gaLib.o \
 newSim.o \
-readGraph.o \
+graphLib.o \
 verilated.o SpCoverage.o
 TARGET_GEN = ${BENCH}Sim
-DEFINE_GEN = -D_FuncMode_
+#DEFINE_GEN = -D_STAGE1_OLD_FN_
 
 test: $(OBJS_TEST)
 	$(CXX) $(OBJS_TEST) $(INCLUDE) $(LIBS) -o $(TARGET_MAIN) -lm -lstdc++ 2>&1 | c++filt
@@ -55,8 +55,8 @@ SpCoverage.o:
 ${BENCH}Int.o: incl.h ${BENCH}Int.h ${BENCH}Int.cpp vType.h verInclude.h
 	$(CXX) $(CFLAGS) -I. -MMD $(INCLUDE) -DVL_PRINTF=printf -DVM_TRACE=0 -DVM_COVERAGE=0 -DVL_DEBUG=1 -c -o ${BENCH}Int.o ${BENCH}Int.cpp
 
-readGraph.o: readGraph.h readGraph.cpp verInclude.h incl.h
-	$(CXX) $(CFLAGS) $(DEFINE_GEN) -I. -MMD $(INCLUDE) -DVL_PRINTF=printf -DVM_TRACE=0 -DVM_COVERAGE=0 -DVL_DEBUG=1 -c -o readGraph.o readGraph.cpp
+graphLib.o: graphLib.h graphLib.cpp verInclude.h incl.h vType.h
+	$(CXX) $(CFLAGS) $(DEFINE_GEN) -I. -MMD $(INCLUDE) -DVL_PRINTF=printf -DVM_TRACE=0 -DVM_COVERAGE=0 -DVL_DEBUG=1 -c -o graphLib.o graphLib.cpp
 
 clean:
 	rm -f *.o

@@ -227,7 +227,10 @@ void gaIndiv_t :: printIndiv(bool full_) {
 
 		for (state_pVec_iter it = state_list.begin();
 				it != state_list.end(); ++it) {
-			(*it)->printState();
+			if (*it)
+				(*it)->printState();
+			else
+				cout << "--" << endl;
 		}
 		cout << endl;
 

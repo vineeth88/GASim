@@ -16,6 +16,7 @@ keyVal_t state_t :: getHash() {
 		state_val.substr(73,1) +  // load
 		state_val.substr(74,1);  // inhibit
 	return hash_value;
+
 }
 
 state_t::state_t() {
@@ -25,15 +26,22 @@ state_t::state_t() {
 	hit_count = 0;
 	
 	state_val = string(CONST_NUM_STATE_BITS, '0');
+
+	mem_alloc_cnt++;
 }
 
 state_t::state_t(const state_t& copy_obj) {
 
 	state_index = copy_obj.state_index;
+	state_val = copy_obj.state_val;
+
 	branch_index = copy_obj.branch_index;
 	hit_count = copy_obj.hit_count;
 
-	state_val = copy_obj.state_val;
+	pIndiv = copy_obj.pIndiv;
+	state_fitness = copy_obj.state_fitness;
+
+	mem_alloc_cnt++;
 }
 
 state_t::state_t(const Vtop* copy_obj, int index_) :
@@ -53,14 +61,23 @@ state_t::state_t(const Vtop* copy_obj, int index_) :
     	<< (bitset<1>)	copy_obj->v__DOT__or1200_ic_fsm__DOT__cache_inhibit;
 
 	ss >> state_val;
+
+	GetCoverage(copy_obj, branch_index);
+
+	mem_alloc_cnt++;
 }
 
 state_t::~state_t() {
 	state_index = -1;
 	hit_count = 0;
 
-	state_val = "INVALID STATE";
+	//state_val = "INVALID STATE";
 	branch_index.clear();
+
+	mem_alloc_cnt--;
+	#ifdef _DBG_DEST_CALL_
+	cout << endl << "Deleted state_t " << mem_alloc_cnt << endl;
+	#endif
 }
 
 state_t& state_t::operator=(const state_t& copy_obj) {   
@@ -123,8 +140,24 @@ string state_t::operator[] (int index_) {
 void state_t::printState (bool full_) {
 	if (full_)
     	cout << state_val << endl;
-	else
-		cout << getHash() << endl;
+	else {
+		cout
+		<< " " << state_val.substr(0,32) 	// addr
+		<< " " << state_val.substr(32,1) 	// read
+		<< " " << state_val.substr(33,1) 	// miss
+		<< " " << state_val.substr(34,1) 	// miss_ack
+		<< " " << state_val.substr(35,32)	// saved_addr
+		<< " " << state_val.substr(67,2) 	// state
+		<< " " << state_val.substr(69,3) 	// cnt
+		<< " " << state_val.substr(72,1) 	// hitmiss_eval
+		<< " " << state_val.substr(73,1) 	// load
+		<< " " << state_val.substr(74,1)	// inhibit
+		<< endl;
+	}
+	for (vector<int>::iterator it = branch_index.begin();
+			it != branch_index.end(); ++it)
+		cout << *it << " ";
+	cout << endl;
 }
 
 void state_t::setCktState(Vtop* top) {
@@ -197,6 +230,8 @@ void set_input(Vtop *top, const vecIn_t& input)	{
     top->icbiu_err_i = input[cnt++];
     top->ic_en 		 = input[cnt++];
     top->icqmem_cycstb_i = input[cnt++];
+    //top->ic_en = 0;	cnt++;
+    //top->icqmem_cycstb_i = 0; cnt ++;
     top->icqmem_ci_i = input[cnt++];
 
     for (int i = 0; i < 4; i++) {
@@ -217,20 +252,20 @@ void set_input(Vtop *top, const vecIn_t& input)	{
         top->spr_dat_i = ((top->spr_dat_i << 1) | (input[cnt++] - 48));
     }
 
-	cout 
-	<< (bitset<1>) top->icbiu_ack_i
-	<< (bitset<1>) top->icbiu_err_i
-	<< (bitset<1>) top->ic_en 		
-	<< (bitset<1>) top->icqmem_cycstb_i 
-	<< (bitset<1>) top->icqmem_ci_i
-	<< (bitset<4>) top->icqmem_sel_i
-	<< (bitset<4>) top->icqmem_tag_i
-	<< (bitset<1>) top->spr_cs
-	<< (bitset<1>) top->spr_write 
-	<< (bitset<32>) top->icbiu_dat_i
-	<< (bitset<32>) top->icqmem_adr_i
-	<< (bitset<32>) top->spr_dat_i
-	<< endl;
+//	cout 
+//	<< (bitset<1>) top->icbiu_ack_i
+//	<< (bitset<1>) top->icbiu_err_i
+//	<< (bitset<1>) top->ic_en 		
+//	<< (bitset<1>) top->icqmem_cycstb_i 
+//	<< (bitset<1>) top->icqmem_ci_i
+//	<< (bitset<4>) top->icqmem_sel_i
+//	<< (bitset<4>) top->icqmem_tag_i
+//	<< (bitset<1>) top->spr_cs
+//	<< (bitset<1>) top->spr_write 
+//	<< (bitset<32>) top->icbiu_dat_i
+//	<< (bitset<32>) top->icqmem_adr_i
+//	<< (bitset<32>) top->spr_dat_i
+//	<< endl;
 
 //    top->icbiu_ack_i = input[0];
 //    top->icbiu_err_i = input[1];
@@ -347,7 +382,7 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
    	
 }
 
-int GetCoverage(Vtop* top, bool printCnt) {
+int GetCoverage(const Vtop* top, bool printCnt) {
     uint count = 0;
     for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
         if (top->__VlSymsp->__Vcoverage[ind]) {
@@ -362,12 +397,12 @@ int GetCoverage(Vtop* top, bool printCnt) {
     return count;
 }
 
-int GetCoverage(Vtop* top, int index) {
+int GetCoverage(const Vtop* top, int index) {
     assert((index >= 0) && (index < CONST_NUM_BRANCH));
     return top->__VlSymsp->__Vcoverage[index];
 }
 
-void GetCoverage(Vtop* top, vector<int>& indVec) {
+void GetCoverage(const Vtop* top, vector<int>& indVec) {
 	indVec.clear();
     for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
         if (top->__VlSymsp->__Vcoverage[ind]) {
@@ -377,7 +412,7 @@ void GetCoverage(Vtop* top, vector<int>& indVec) {
 
 }
 
-int GetBranchCounters(Vtop* top, vector<int>& branchHit) {
+int GetBranchCounters(const Vtop* top, vector<int>& branchHit) {
 	uint numBranchHit = 0;
 	if (branchHit.size() != (uint)CONST_NUM_BRANCH)
 		branchHit = vector<int>(CONST_NUM_BRANCH);

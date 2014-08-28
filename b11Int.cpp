@@ -37,12 +37,14 @@ state_t::state_t(const Vtop* copy_obj, int index_) :
 	stringstream ss;
    	ss 	<< (bitset<6>) copy_obj->v__DOT__r_in
    	 	<< (bitset<4>) copy_obj->v__DOT__stato
-    	<< (bitset<6>) copy_obj->v__DOT__cont1
+    	<< (bitset<6>) copy_obj->v__DOT__cont
     	<< (bitset<32>) copy_obj->v__DOT__cont1;
 
 	ss >> state_val;
 
 	GetCoverage(copy_obj, branch_index);
+
+//	printState();
 
 	mem_alloc_cnt++;
 }
@@ -100,11 +102,19 @@ string state_t::operator[] (int index_) {
 }
 
 void state_t::printState (bool full_) {
-    cout << state_val << endl;
+	cout << state_val.substr(0,6)	<< " "
+		 << state_val.substr(6,4)	<< " "
+		 << state_val.substr(10,6)	<< " "
+		 << state_val.substr(16,32) << " "
+		 << endl;
+	for (vector<int>::iterator it = branch_index.begin();
+			it != branch_index.end(); ++it)
+		cout << *it << " ";
+	cout << endl;
 }
 
 void state_t::setCktState(Vtop* top) {
-	uint val = 0;
+	int val = 0;
 	for(int i = 0; i < CONST_NUM_STATE_BITS; ++i) {
 
 		val = val << 1;
@@ -134,7 +144,6 @@ void state_t::setCktState(Vtop* top) {
 
 }
 
-// END of work - 04/13
 // TODO : Need to work on CONST_NUM_STATE_BITS & CONST_NUM_CTRL_BITS
 
 // String -> Integer values
@@ -142,12 +151,13 @@ void set_input(Vtop *top, const vecIn_t& input)
 {
 	assert(input.length() == (uint)CONST_NUM_INPUT_BITS);
 	top->x_in = 0; 
-	for(uint i = 0; i < 4; ++i) {
+	for(uint i = 0; i < 6; ++i) {
 		top->x_in = top->x_in << 1;
 		if (input[i] == '1')
 			top->x_in++;
 	}
 	top->stbi = input[6] - 48;
+
 }
 
 void RandomVecIn(vecIn_t& vecIn)
@@ -225,6 +235,13 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
     uint main_time = 0;
 	sim_reset_clock(top);
 	//cout << "Simulating " << vecIn << endl;
+
+	stringstream ss;
+   	ss 	<< (int) top->v__DOT__r_in	<< " "
+    	<< (int) top->v__DOT__stato	<< " "
+   		<< (int) top->v__DOT__cont	<< " "
+   		<< (int) top->v__DOT__cont1	<< " "
+		<< endl;
 	
 	assert (vecIn.length() == (uint)CONST_NUM_INPUT_BITS);
 	#ifdef _ResetMask_
@@ -239,7 +256,18 @@ void SimOneCycle(Vtop* top, vecIn_t& vecIn) {
         main_time++;
         ToggleClk(top);
     }
-   	
+   
+  	#ifdef b11_branch6_bg
+	if (GetCoverage(top, 7)) {
+		ss 	<< vecIn << " hit branch 7" << endl; 
+		ss 	<< (int) top->v__DOT__r_in	<< " "
+			<< (int) top->v__DOT__stato	<< " "
+			<< (int) top->v__DOT__cont	<< " "
+			<< (int) top->v__DOT__cont1	<< " "
+			<< endl;
+		cout << ss.str() << endl;
+	}
+	#endif
 }
 
 int GetCoverage(const Vtop* top, bool printCnt) {
@@ -306,10 +334,10 @@ void setAllXState(Vtop* top) {
 }
 
 void printCktState (Vtop* top) {
-   	cout << (uint) top->v__DOT__r_in	<< " "
-    	 << (uint) top->v__DOT__stato	<< " "
-   		 << (uint) top->v__DOT__cont1	<< " "
-   		 << (uint) top->v__DOT__cont1	<< " "
+   	cout << (int) top->v__DOT__r_in	<< " "
+    	 << (int) top->v__DOT__stato	<< " "
+   		 << (int) top->v__DOT__cont	<< " "
+   		 << (int) top->v__DOT__cont1	<< " "
 		 << endl;
 }
 

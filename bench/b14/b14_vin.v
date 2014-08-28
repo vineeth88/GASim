@@ -917,23 +917,23 @@ always @(posedge clock or posedge reset)
                11:		// 186
                   begin
                   case (process_1_mf)
-                  0:	// 187
+                  0:	// 177
                      begin
                      process_1_m = process_1_tail;   
                      end
-                  1:	// 188
+                  1:	// 178
                      begin
                      process_1_m = datai;   
                      addr <= process_1_tail;   
                      rd <= 1'b 1;   
                      end
-                  2:	// 189
+                  2:	// 179
                      begin
                      addr <= (process_1_tail + process_1_reg1) %  /* VHDL ** operator */ 2**20;   
                      rd <= 1'b 1;   
                      process_1_m = datai;   
                      end
-                  3:	// 190
+                  3:	// 180
                      begin
                      addr <= (process_1_tail + process_1_reg2) %  /* VHDL ** operator */ 2**20;   
                      rd <= 1'b 1;   
@@ -941,23 +941,23 @@ always @(posedge clock or posedge reset)
                      end
                   endcase
                   case (process_1_d)
-                  0:	// 191
+                  0:	// 181
                      begin
                      process_1_reg0 = (process_1_r - process_1_m) %  /* VHDL ** operator */ (2**30);   
                      end
-                  1:	// 192
+                  1:	// 182
                      begin
                      process_1_reg1 = (process_1_r - process_1_m) %  /* VHDL ** operator */ (2**30);   
                      end
-                  2:	// 193
+                  2:	// 183
                      begin
                      process_1_reg2 = (process_1_r - process_1_m) %  /* VHDL ** operator */ (2**30);   
                      end
-                  3:	// 194
+                  3:	// 184
                      begin
                      process_1_reg3 = (process_1_r - process_1_m) %  /* VHDL ** operator */ (2**30);   
                      end
-                  default:	// 195
+                  default:	// 185
                      ;
                   endcase
                   end
@@ -1044,7 +1044,7 @@ always @(posedge clock or posedge reset)
        /* VHDL ** operator */ 2**20;   
                   end
                endcase
-               addr <= process_1_m % 2 * 20;   
+               addr <= process_1_m % (2**20);   
 //  addr <= m;
 //  removed (!)fs020699
                wr <= 1'b 1;   
@@ -1057,22 +1057,6 @@ always @(posedge clock or posedge reset)
       endcase
       end
    end
-
-
-
-// Subprograms that are created by VHDL2V translator
-function integer power;
-    input left_operand;
-    integer left_operand;
-    input exponent;
-    integer exponent;
-    integer index;
-    begin
-        power = 1;
-        for(index = 0; index < exponent; index = index+1)
-            power = power * left_operand;
-    end
-endfunction // power 
 
 endmodule // module b14
 
