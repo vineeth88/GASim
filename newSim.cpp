@@ -4,8 +4,9 @@
 #include "gaLib.h"
 #include "graphLib.h"
 
-rstIn_t gVarClass::resetInput = rstIn_t(CONST_NUM_INPUT_BITS, 'X');
-int_vec IsBranchLeaf(CONST_NUM_BRANCH, 0);
+//rstIn_t 	gVarClass::resetInput = rstIn_t(CONST_NUM_INPUT_BITS, 'X');
+int_vec 	IsBranchLeaf(CONST_NUM_BRANCH, 0);
+int_vec		exclBranchList(CONST_NUM_BRANCH, 0);
 
 int gaIndiv_t::mem_alloc_cnt = 0;
 int state_t::mem_alloc_cnt = 0;
@@ -24,29 +25,34 @@ public:
 
 	vecIn_t			inputVec;
 	int_vec			branchHit;
-
 	state_pVec		stateList;	
 	
 	Stage1_Param() {
 		branchHit = int_vec(CONST_NUM_BRANCH, 0);
 		stateList = state_pVec();
-
 	}
 
 	~Stage1_Param() {
-		branchHit = int_vec();
+		branchHit.clear();
+		inputVec.clear();
+
 		for (int st = 0; (uint)st < stateList.size(); ++st) {
 			if (stateList[st]) {
 				delete stateList[st];
 				stateList[st] = NULL;
 			}
 		}
+		stateList.clear();
+
 	}
 
 };
 
 void Stage1_GenerateVectors(Stage1_Param*);
 void readParam(Stage1_Param*);
+
+void readExclBranchList();
+int computeBranches(vector<int>&);
 
 int checkCoverage(const vecIn_t&);
 void DisplayMap(stateMap_t&);
@@ -55,6 +61,7 @@ void printSet(set<int>&);
 void printCnt(int_vec&);
 void PrintVectorSet(const vecIn_t& inputVec, bool printFlag = false);
 bool compCoverage(gaIndiv_t*, gaIndiv_t*);
+bool compFitnessGA(gaIndiv_t*, gaIndiv_t*);
 
 int main(int argc, char* argv[]) {
 
@@ -80,10 +87,10 @@ int main(int argc, char* argv[]) {
         if (strcmp(argv[1], "-h") == 0) {
             cout << "Input format: " << endl
                 << argv[0] << " "
-                << argv[1] << " [<ckt>.param]" << endl
-				<< "Required files for b11/b12 : " 
-				<< benchCkt << ".graph, " 
-				<< benchCkt << ".bg " << endl;
+                << argv[1] << " [<ckt>.param]" << endl;
+	//			<< "Required files for b11/b12 : " 
+	//			<< benchCkt << ".graph, " 
+	//			<< benchCkt << ".bg " << endl;
         }
         else {
             sprintf(paramFile, "%s", argv[1]);
@@ -91,12 +98,9 @@ int main(int argc, char* argv[]) {
         }
 	}		
 	
+	readExclBranchList();
+
    	Stage1_Param *paramObj1 = new Stage1_Param;
-	paramObj1->NUM_GEN = 8;
-	paramObj1->POP_SIZE = 256;
-	paramObj1->INDIV_LEN = 20;
-	paramObj1->NUM_INDIV = 5;
-	paramObj1->NUM_TOP_INDIV = 4;
 
 	paramObj1->fName = string(paramFile);
 	readParam(paramObj1);
@@ -107,8 +111,8 @@ int main(int argc, char* argv[]) {
 	cout << "Uncovered Branches: " << endl;
 	int num_branch_uncovered = 0;
 	for (int ind = 0; ind < CONST_NUM_BRANCH; ++ind) {
-		if(IsDefaultBranch(ind))
-			paramObj1->branchHit[ind] = -5;
+		if(exclBranchList[ind])
+			paramObj1->branchHit[ind] = -10;
 
 		if (paramObj1->branchHit[ind] == 0) {
 			cout << ind << " ";
@@ -145,6 +149,11 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 	double WT_FIT_STATE = 0.0;
 	double WT_FIT_COV = 0.3;
 	double WT_FIT_BRANCH = 0.7;
+	
+	/* TODO :
+		Need to set the following weights according to the ckt parameters
+		-	Depth of the ckt (Max branches that can be reached in a single cycle)
+	*/
 
 	int WT_COV = 500;
 	int WT_NEW_BRANCH = 2000;
@@ -154,7 +163,8 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 	
 	Vtop *cktVar = new Vtop;
 
-	int_vec branch_counters(CONST_NUM_BRANCH, 0);
+//	int_vec branch_counters(CONST_NUM_BRANCH, 0);
+	int_vec branch_counters = exclBranchList;
 
 	SimMultiCycle(cktVar, 0);
 	for (int br = 0; br < CONST_NUM_BRANCH; ++br)
@@ -181,7 +191,9 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 	currStateMap.clear();
 	int prevMaxCov = 0;
 
+	gaIndiv_pVec topIndiv_vec;
 	bool gaTerminate = false;
+	int last_gen = 0;
 	for (int gen = 0; !gaTerminate && (gen < NUM_GEN); ++gen) {
 		
 		cout << "GEN " << gen << endl << endl;
@@ -228,10 +240,12 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 				}
 			}
 
-			/* Add branch hits to currBranchCov */
-			for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
-				currBranchCov[br] += indiv->branch_cov[br];
-			}
+			indiv->num_branch = computeBranches(indiv->branch_cov);
+
+//			/* Add branch hits to currBranchCov */
+//			for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
+//				currBranchCov[br] += indiv->branch_cov[br];
+//			}
 
 			/* Computing max and avg branch coverage */
 			if (maxCov < indiv->num_branch)
@@ -295,6 +309,14 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 					st != currStateMap.end(); ++st) 
 				currStateMap[st->first] = NULL;
 
+#define ABXY
+
+#ifdef ABXY
+			std::sort(stage0Pop.indiv_vec.begin(), stage0Pop.indiv_vec.end(), compFitness);
+			gaIndiv_t *tmp = new gaIndiv_t(*(stage0Pop.indiv_vec[0]));
+//			stage0Pop.indiv_vec[0]->state_list = state_pVec(tmp->vec_length, NULL);
+			topIndiv_vec.push_back(tmp);
+#endif
 			stage0Pop.gaEvolve();
 			
 			prevMaxCov = maxCov;
@@ -302,8 +324,9 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 		else
 			cout << "Terminating after gen " << gen << endl;
 
+		last_gen = gen;
 	}
-		
+
 	/* Mine for interesting individuals and states 	*/
 	cout << "States reached after Round 0" << endl;
 
@@ -311,7 +334,37 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 
 	/* N.logN for sort instead of N.TOP_INDIV for finding TOP_INDIV top indivs*/
 	std::sort(stage0Pop.indiv_vec.begin(), stage0Pop.indiv_vec.end(), compCoverage);
+
+
+#ifdef ABXY
+
+	for (gaIndiv_pVec_iter gt = topIndiv_vec.begin();
+			gt != topIndiv_vec.end(); ++gt) {
+		gaIndiv_t *tmp = *gt;
+		tmp->state_list = state_pVec(tmp->vec_length, NULL);
+		tmp->simCkt(cktVar);
+	}
+
+	topIndiv_vec.push_back(stage0Pop.indiv_vec[0]);
+	stage0Pop.indiv_vec[0] = NULL;
+	std:sort(topIndiv_vec.begin(), topIndiv_vec.end(), compCoverage);
+
+	gaIndiv_t *indiv = topIndiv_vec[0];
 	
+	gaIndiv_pVec_iter gt = topIndiv_vec.begin(); 
+	gt++;
+	for (;gt != topIndiv_vec.end(); ++gt) {
+		delete *gt;
+		*gt = NULL;
+	}
+
+	topIndiv_vec.clear();
+#endif
+
+#ifndef ABXY
+	gaIndiv_t *indiv = stage0Pop.indiv_vec[0];
+#endif
+
 	/* ***** ROUND 1:MAX_ROUNDS	***** */
 
 //	int NUM_TOP_INDIV = 4
@@ -331,8 +384,11 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 	vecIn_t startVec;
 	startPool.clear();
 
-	gaIndiv_t *indiv = stage0Pop.indiv_vec[0];
+//	gaIndiv_t *indiv = stage0Pop.indiv_vec[0];
+	ResetCounters(cktVar);
+	indiv->simCkt(cktVar);
 
+	indiv->printIndiv(1);
 	for (int st = 0; st <= indiv->max_index; ++st) {	
 		state_t *curr = indiv->state_list[st];
 		keyVal_t hash_val_ = curr->getHash();
@@ -419,6 +475,8 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 					}
 				}
 
+				indiv->num_branch = computeBranches(indiv->branch_cov);
+
 				/* Computing max and avg branch coverage */
 				if (maxCov < indiv->num_branch)
 					maxCov = indiv->num_branch;
@@ -444,7 +502,8 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 				/* Fitness for branch coverage	*/
 				fitness_t fitness_branch = 0;
 				for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
-					if (indiv->branch_cov[br] && (branch_counters[br] == 0))
+					if (indiv->branch_cov[br] && (branch_counters[br] == 0) 
+							&& (exclBranchList[br] == 0))
 						fitness_branch -= WT_NEW_BRANCH;
 				}
 
@@ -869,8 +928,63 @@ int checkCoverage(const vecIn_t& inputVec) {
 
 	return index;
 }
+void readExclBranchList () {
+	
+	ifstream fileIn;
+	char fName[80];
+	sprintf(fName, "%s.excl", benchCkt);
+	fileIn.open(fName, ios::in);
 
-void readParam(Stage1_Param* paramObj) {
+	if(fileIn) {
+		cout << "Reading excluded branch list from "
+			 << fName << endl;
+	}
+	else {
+		cout << "Using default branch list from " 
+			 << benchCkt << "Int.h" << endl;
+		for (int br = 0; br < CONST_NUM_BRANCH; ++br){ 
+			if (IsDefaultBranch(br)) {
+				exclBranchList[br] = -10;
+				cout << br << " ";
+			}
+		}
+		cout << endl;
+		return;
+	}
+
+	while(fileIn) {	
+		stringstream ss;
+		string curr;
+		getline(fileIn, curr);
+
+		ss << curr;
+		int br;
+		ss >> br;
+		while(ss) {
+			cout << br << " ";
+			exclBranchList[br] = -10;
+			ss >> br;
+		}
+		cout << endl;
+	}
+
+	printCnt(exclBranchList);
+	return;
+}
+
+int computeBranches(vector<int>& branch_cov) {
+
+	assert(branch_cov.size() == CONST_NUM_BRANCH);
+	int num_branch = 0;
+	for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
+		if (branch_cov[br] && !exclBranchList[br])
+			num_branch ++;
+	}
+	return num_branch;
+}
+	
+
+void readParam (Stage1_Param* paramObj) {
 
 	ifstream paramIn;
 	paramIn.open((paramObj->fName).c_str(), ios::in);
@@ -933,19 +1047,19 @@ void readParam(Stage1_Param* paramObj) {
 				else 
 					paramObj->INDIV_LEN = 20;
 			}
-			else if (curr.find("NUM_INDIV_0") != string::npos) {
-				size_t ind = curr.find("=");
-				if (ind != string::npos) {
-					stringstream ss;
-					int val;
-					ss << curr.substr(ind+1);
-					ss >> val;
-					cout << "NUM_INDIV_0 = " << val << endl;
-					paramObj->NUM_INDIV = val;
-				}
-				else 
-					paramObj->NUM_INDIV = 2;
-			}
+		//	else if (curr.find("NUM_INDIV_0") != string::npos) {
+		//		size_t ind = curr.find("=");
+		//		if (ind != string::npos) {
+		//			stringstream ss;
+		//			int val;
+		//			ss << curr.substr(ind+1);
+		//			ss >> val;
+		//			cout << "NUM_INDIV_0 = " << val << endl;
+		//			paramObj->NUM_INDIV = val;
+		//		}
+		//		else 
+		//			paramObj->NUM_INDIV = 2;
+		//	}
 			else if (curr.find("MAX_ROUNDS_0") != string::npos) {
 				size_t ind = curr.find("=");
 				if (ind != string::npos) {
@@ -1044,3 +1158,4 @@ bool compCoverage(gaIndiv_t* A, gaIndiv_t* B) {
 		return (A->max_index < B->max_index);
 	
 }
+

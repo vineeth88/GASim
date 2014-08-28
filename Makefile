@@ -1,4 +1,4 @@
-BENCH = b11
+BENCH = b14
 
 DEFINE_BENCH = -D__${BENCH}
 BENCH_DIR = ./bench/${BENCH}/obj_dir
@@ -27,7 +27,7 @@ newSim.o \
 graphLib.o \
 verilated.o SpCoverage.o
 TARGET_GEN = ${BENCH}Sim
-DEFINE_GEN = -D_FuncMode_
+#DEFINE_GEN = -D_STAGE1_OLD_FN_
 
 test: $(OBJS_TEST)
 	$(CXX) $(OBJS_TEST) $(INCLUDE) $(LIBS) -o $(TARGET_MAIN) -lm -lstdc++ 2>&1 | c++filt
