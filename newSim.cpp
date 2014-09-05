@@ -70,6 +70,7 @@ class Stage2_Param : public Stage1_Param {
 	int_vec 	lastBranchHit;
 
 	brGraph_t*	branchGraph;
+	covGraph_t* covGraph;
 	int 		curr_val, end_val;
 	int			tar_edge, tar_node;
 
@@ -125,6 +126,7 @@ bool compCoverage(gaIndiv_t*, gaIndiv_t*);
 
 /* Stage 2 Functions */
 void Stage2_GenerateVectors(Stage2_Param*);
+void Stage2_Core(Stage2_Param*);
 
 void readParam(Stage2_Param*);
 bool readTopNodes(covGraph_t&, brGraph_t&);
@@ -203,6 +205,8 @@ int main(int argc, char* argv[]) {
 		 << "Memory allocation details: " << endl
 		 << "gaIndiv_t: " << gaIndiv_t::mem_alloc_cnt << endl
 		 << "state_t: " << state_t::mem_alloc_cnt << endl;
+	
+	exit(0);
 
 	/* *************** END : STAGE 1	*************** */
 	#if !defined(__b12)
@@ -230,7 +234,8 @@ int main(int argc, char* argv[]) {
 	Stage2_Param *paramObj2 = new Stage2_Param(paramObj1);
 	paramObj2->inputVec = paramObj1->inputVec;
 	paramObj2->branchGraph = &branchGraph;
-
+	paramObj2->covGraph = &covGraph;
+	
 	paramObj2->startState = paramObj1->stateList.back();
 	paramObj2->stateList = paramObj1->stateList;
 	paramObj1->stateList.clear();
@@ -239,14 +244,35 @@ int main(int argc, char* argv[]) {
 	SimMultiCycle(paramObj2->cktVar, paramObj1->inputVec);
 
 	readParam(paramObj2);
+	Stage2_GenerateVectors(paramObj2);
 	
 //	cout << "Last state reached at the end of Stage 1" << endl;
 //	paramObj2->startState->printState();
 	
+	
+	/* ***************** END : STAGE 2 ************** */
+	PrintVectorSet(paramObj2->inputVec, true);
+	
+	cout << endl
+		 << "Memory allocation details: " << endl
+		 << "gaIndiv_t: " << gaIndiv_t::mem_alloc_cnt << endl
+		 << "state_t: " << state_t::mem_alloc_cnt << endl;
+	
+	exit(0);
+	delete paramObj2;
+	return 0;
+	
+}
+
+void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
+
 	int_vec &branch_index = paramObj2->branch_index;
 	int_vec &branchHit = paramObj2->branchHit;
 	set<int> &favorSet = paramObj2->favorSet;
 //	set<int> &unCovered = paramObj2->unCovered;
+
+	brGraph_t& branchGraph = *paramObj2->branchGraph;
+	covGraph_t& covGraph = *paramObj2->covGraph;
 
 	int_vec unCovered;
 	for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
@@ -364,19 +390,19 @@ int main(int argc, char* argv[]) {
 			paramObj2->tar_edge = tar_edge;
 			paramObj2->tar_node = iter_node->outNodes[brInd];
 
-			Stage2_GenerateVectors(paramObj2);
+			Stage2_Core(paramObj2);
 			int branch_hit = 20;
 			for (int br = 0; br < iter_node->outEdges.size(); ++br) {
 				int tmp_edge = iter_node->outEdges[br];
 				if ((paramObj2->lastBranchHit[tmp_edge]) && 
 					(iter_node->outNodes[br] != iter_val))
-						branch_hit = 0;
+						branch_hit = 1;
 			}
 			if (branch_hit) {
 				if(self_loop_br.size()) {
 					while (branch_hit) {
 						/*	Run stage 2	*/
-						Stage2_GenerateVectors(paramObj2);
+						Stage2_Core(paramObj2);
 						if (paramObj2->lastBranchHit[tar_edge]) {
 							branch_hit = 0;
 							break;
@@ -526,6 +552,7 @@ int main(int argc, char* argv[]) {
 			//PrintVectorSet(paramObj2->inputVec, true);
 			//getDominator(covGraph, unCovered);
 			assert(nxtPaths.size());
+			/* Might need to backtrack or just exit in this case */
 		}
 
 		for (int np = 0; np < nxtPaths.size(); ++np) {
@@ -583,21 +610,12 @@ int main(int argc, char* argv[]) {
 	}
 	#endif
 
-	/* ***************** END : STAGE 2 ************** */
-	PrintVectorSet(paramObj2->inputVec, true);
-	
-	cout << endl
-		 << "Memory allocation details: " << endl
-		 << "gaIndiv_t: " << gaIndiv_t::mem_alloc_cnt << endl
-		 << "state_t: " << state_t::mem_alloc_cnt << endl;
-	
-	exit(0);
-	delete paramObj2;
-	return 0;
-	
+
+
+	return;
 }
 
-void Stage2_GenerateVectors(Stage2_Param* paramObj) {
+void Stage2_Core(Stage2_Param* paramObj) {
 
 	cout << endl 
 		 << "GA Stage 2: " << endl
@@ -681,10 +699,13 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj) {
 			
 			ResetCounters(cktVar);
 			gaIndiv_t* indiv = stage2Pop.indiv_vec[ind];
+
+			/* Reset masking for b12 */
 			#if defined(__b12)
 			for (int x = 0; x < indiv->input_vec.length(); x += 5) 
 				indiv->input_vec[x] = '0';
 			#endif
+
 			indiv->simCkt(cktVar);
 
 			int_vec state_fit_vec;
@@ -1096,6 +1117,13 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 			
 			ResetCounters(cktVar);
 			gaIndiv_t* indiv = stage0Pop.indiv_vec[ind];
+
+			/* Reset masking for b12 */
+			#if defined(__b12)
+			for (int x = 0; x < indiv->input_vec.length(); x += 5) 
+				indiv->input_vec[x] = '0';
+			#endif
+
 			indiv->simCkt(cktVar);
 
 //			indiv->printIndiv(1);
@@ -1693,6 +1721,7 @@ void readParam (Stage1_Param* paramObj) {
 	}
 }
 
+/* Read parameters for Stage 1 from ckt.param	*/
 void readParam(Stage2_Param* paramObj) {
 
 	ifstream paramIn;
@@ -1827,7 +1856,7 @@ void printCnt(int_vec& vec_) {
 }
 
 /* Print the test vector set inputVec
-	%2 = True	=>	Print ckt_(rand).vec	*/
+	%2 = True	=>	Print to file ckt_(rand).vec	*/
 void PrintVectorSet(const vecIn_t& inputVec, bool printFlag ) {
 
 	ofstream vecOut;
