@@ -4,6 +4,8 @@
 #include "gaLib.h"
 #include "graphLib.h"
 
+#define GA_FIND_TOP_INDIV
+
 //rstIn_t 	gVarClass::resetInput = rstIn_t(CONST_NUM_INPUT_BITS, 'X');
 int_vec 	IsBranchLeaf(CONST_NUM_BRANCH, 0);
 int_vec		exclBranchList(CONST_NUM_BRANCH, 0);
@@ -149,6 +151,8 @@ int main(int argc, char* argv[]) {
 #define random_seed
 #ifdef random_seed
     uint seed = time(NULL);
+
+	seed = 1409956612;
     cout << seed << endl;
     srand(seed);
 #endif
@@ -206,7 +210,7 @@ int main(int argc, char* argv[]) {
 		 << "gaIndiv_t: " << gaIndiv_t::mem_alloc_cnt << endl
 		 << "state_t: " << state_t::mem_alloc_cnt << endl;
 	
-	exit(0);
+	//exit(0);
 
 	/* *************** END : STAGE 1	*************** */
 	#if !defined(__b12)
@@ -831,9 +835,22 @@ void Stage2_Core(Stage2_Param* paramObj) {
 	}
 	
 	cout << "After GA : " << endl;
+	
+	#ifndef GA_FIND_TOP_INDIV
 	std::sort(stage2Pop.indiv_vec.begin(), stage2Pop.indiv_vec.end(), compFitness);
 	gaIndiv_t *indiv = stage2Pop.indiv_vec[0];
+	#endif
+
+	#ifdef GA_FIND_TOP_INDIV
+	gaIndiv_t *indiv = stage2Pop.indiv_vec[0];
+	for (gaIndiv_pVec_iter gt = stage2Pop.indiv_vec.begin(); 
+			gt != stage2Pop.indiv_vec.end(); ++gt) {
+		if (compFitness(*gt, indiv))
+			indiv = *gt;
+	}
+	#endif
 	indiv->printIndiv(1);
+
 	cout << endl << indiv->max_index + 1 << " vectors copied" << endl;
 	
 	paramObj->inputVec += indiv->input_vec.substr(0, CONST_NUM_INPUT_BITS * (indiv->max_index + 1));
@@ -1119,10 +1136,10 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 			gaIndiv_t* indiv = stage0Pop.indiv_vec[ind];
 
 			/* Reset masking for b12 */
-			#if defined(__b12)
-			for (int x = 0; x < indiv->input_vec.length(); x += 5) 
-				indiv->input_vec[x] = '0';
-			#endif
+//			#if defined(__b12)
+//			for (int x = 0; x < indiv->input_vec.length(); x += 5) 
+//				indiv->input_vec[x] = '0';
+//			#endif
 
 			indiv->simCkt(cktVar);
 
@@ -1216,8 +1233,34 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 					st != currStateMap.end(); ++st) 
 				currStateMap[st->first] = NULL;
 
-			std::sort(stage0Pop.indiv_vec.begin(), stage0Pop.indiv_vec.end(), compFitness);
+			#ifndef GA_FIND_TOP_INDIV
+//			for (int ind = 0; ind < POP_SIZE; ++ind) {
+//				(stage0Pop.indiv_vec[ind])->printIndiv(1);
+//			}
+			std::sort(stage0Pop.indiv_vec.begin(), stage0Pop.indiv_vec.end(), compCoverage);
+			cout << "Fitness: " << (stage0Pop.indiv_vec[0])->fitness << "\t | " << (stage0Pop.indiv_vec[0])->index << endl;
 			gaIndiv_t *tmp = new gaIndiv_t(*(stage0Pop.indiv_vec[0]));
+			#endif
+
+			#ifdef GA_FIND_TOP_INDIV
+			gaIndiv_t *indiv = stage0Pop.indiv_vec[0];
+
+//			for (int ind = 0; ind < POP_SIZE; ++ind) {
+//				gaIndiv_t *gt = stage0Pop.indiv_vec[ind];
+////				gt->printIndiv(1);
+//				if (compCoverage(gt, indiv))
+//					indiv = gt;
+//			}
+
+			for (gaIndiv_pVec_iter gt = stage0Pop.indiv_vec.begin(); 
+					gt != stage0Pop.indiv_vec.end(); ++gt) {
+				if (compCoverage(*gt, indiv))
+					indiv = *gt;
+			}
+			cout << "Fitness: " << indiv->fitness << "\t | " << indiv->index << endl;
+			gaIndiv_t *tmp = new gaIndiv_t(*indiv);
+			#endif
+
 			topIndiv_vec.push_back(tmp);
 
 			stage0Pop.gaEvolve();
@@ -1231,9 +1274,6 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 
 	cout << "States allocated: " << state_t::mem_alloc_cnt << endl;
 
-	/* N.logN for sort instead of N.TOP_INDIV for finding TOP_INDIV top indivs*/
-	std::sort(stage0Pop.indiv_vec.begin(), stage0Pop.indiv_vec.end(), compCoverage);
-
 	for (gaIndiv_pVec_iter gt = topIndiv_vec.begin();
 			gt != topIndiv_vec.end(); ++gt) {
 		gaIndiv_t *tmp = *gt;
@@ -1241,10 +1281,31 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 		tmp->simCkt(cktVar);
 	}
 
+	/* N.logN for sort instead of N.TOP_INDIV for finding TOP_INDIV top indivs*/
+	#ifndef GA_FIND_TOP_INDIV
+	std::sort(stage0Pop.indiv_vec.begin(), stage0Pop.indiv_vec.end(), compCoverage);
+
 	topIndiv_vec.push_back(stage0Pop.indiv_vec[0]);
 	stage0Pop.indiv_vec[0] = NULL;
-	std::sort(topIndiv_vec.begin(), topIndiv_vec.end(), compCoverage);
+	#endif
 
+	#ifdef GA_FIND_TOP_INDIV
+	gaIndiv_t *tmp = stage0Pop.indiv_vec[0];
+	int max_idx = 0, idx = 0;
+	for (gaIndiv_pVec_iter gt = stage0Pop.indiv_vec.begin(); 
+			gt != stage0Pop.indiv_vec.end(); ++gt, ++idx) {
+		if (compCoverage(*gt, tmp)) {
+			tmp = *gt;
+			max_idx = idx;
+		}
+	}
+
+	topIndiv_vec.push_back(stage0Pop.indiv_vec[max_idx]);
+	stage0Pop.indiv_vec[max_idx] = NULL;
+	#endif
+
+	/* Sorting to calculate the best indiv among the N generations */
+	std::sort(topIndiv_vec.begin(), topIndiv_vec.end(), compCoverage);
 	gaIndiv_t *indiv = topIndiv_vec[0];
 	
 	gaIndiv_pVec_iter gt = topIndiv_vec.begin(); 
@@ -1255,10 +1316,6 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 	}
 
 	topIndiv_vec.clear();
-
-#ifdef ABXY
-	gaIndiv_t *indiv = stage0Pop.indiv_vec[0];
-#endif
 
 	/* ***** ROUND 1:MAX_ROUNDS	***** */
 
@@ -1436,10 +1493,21 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 
 		}
 			
+		#ifndef GA_FIND_TOP_INDIV
 		/* N.logN for sort instead of N.TOP_INDIV for finding TOP_INDIV top indivs*/
 		std::sort(stage0Pop.indiv_vec.begin(), stage0Pop.indiv_vec.end(), compFitness);
-	
 		gaIndiv_t *indiv = stage0Pop.indiv_vec[0];
+		#endif
+
+		#ifdef GA_FIND_TOP_INDIV
+		gaIndiv_t *indiv = stage0Pop.indiv_vec[0];
+		for (gaIndiv_pVec_iter gt = stage0Pop.indiv_vec.begin(); 
+				gt != stage0Pop.indiv_vec.end(); ++gt) {
+			if (compFitness(*gt, indiv))
+				indiv = *gt;
+		}
+		#endif
+
 		cout << "Fittest indiv after round " << round << endl;
 		indiv->printIndiv(1);
 
