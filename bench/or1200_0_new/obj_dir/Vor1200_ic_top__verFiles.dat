@@ -1,8 +1,0 @@
-# DESCRIPTION: Verilator output: Timestamp data for --skip-identical.  Delete at will.
-C "--cc -E --coverage-line -CFLAGS -g or1200_ic_top.v"
-S   4365529 27529467  1397155569 "/usr/local/bin/verilator_bin"
-T       139 35258385  1398109725 "obj_dir/Vor1200_ic_top__ver.d"
-T         0        0  1398109725 "obj_dir/Vor1200_ic_top__verFiles.dat"
-S     40825 35258382  1398099452 "or1200_defines.v"
-S      8582 35258384  1398109694 "or1200_ic_top.v"
-S        19 35258383  1398109243 "timescale.v"
