@@ -6,8 +6,8 @@
 
 // Verilator Include
 #include "verilated.h"
-#include "bench/b14/obj_dir/Vtop__Syms.h"
-#include "bench/b14/obj_dir/Vtop.h"
+#include "bench/b14/cpp/Vtop__Syms.h"
+#include "bench/b14/cpp/Vtop.h"
 
 // User Defined Datatypes
 #include "vType.h"

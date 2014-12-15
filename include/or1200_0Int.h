@@ -6,8 +6,8 @@
 
 // Verilator Include
 #include "verilated.h"
-#include "bench/or1200_0/obj_dir/Vtop__Syms.h"
-#include "bench/or1200_0/obj_dir/Vtop.h"
+#include "bench/or1200_0/cpp/Vtop__Syms.h"
+#include "bench/or1200_0/cpp/Vtop.h"
 
 // User Defined Datatypes
 #include "vType.h"
@@ -45,7 +45,7 @@ void printCktState(Vtop*);
 inline
 bool IsDefaultBranch(const int i)
 {
-    return (i == 17); // reset branch
+    return (i == 17) || (i == 1); // reset branch
 }
 
 // Circuit Simulation Functions

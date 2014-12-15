@@ -29,7 +29,6 @@
 #elif defined(__b12)
 	#define benchCkt "b12"
 	#define benchDir "bench/b12/"
-	#define rstInput 1
 	#include "b12Int.h"
 
 #elif defined(__b14)
@@ -41,6 +40,21 @@
 	#define benchCkt "or1200_0"
 	#define benchDir "bench/or1200_0/"
 	#include "or1200_0Int.h"
+
+#elif defined(__or1200_1)
+	#define benchCkt "or1200_1"
+	#define benchDir "bench/or1200_1/"
+	#include "or1200_1Int.h"
+
+#elif defined(__or1200_2)
+	#define benchCkt "or1200_2"
+	#define benchDir "bench/or1200_2/"
+	#include "or1200_2Int.h"
+
+#elif defined(__or1200_3)
+	#define benchCkt "or1200_3"
+	#define benchDir "bench/or1200_3/"
+	#include "or1200_3Int.h"
 
 #endif
 
