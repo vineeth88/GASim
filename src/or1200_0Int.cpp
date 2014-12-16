@@ -1,19 +1,13 @@
-#include "or1200_0Int.h"
+#include "include/or1200_0Int.h"
 
 using namespace std;
 
 keyVal_t state_t :: getHash() {
 	// TODO
 	keyVal_t hash_value = 
-		state_val.substr(0,32) +  // addr
-		state_val.substr(32,1) +  // read
-		state_val.substr(33,1) +  // miss
-		state_val.substr(34,1) +  // miss_ack
-		state_val.substr(35,32) +  // saved_addr
 		state_val.substr(67,2) +  // state
 		state_val.substr(69,3) +  // cnt
 		state_val.substr(72,1) +  // hitmiss_eval
-		state_val.substr(73,1) +  // load
 		state_val.substr(74,1);  // inhibit
 	return hash_value;
 
@@ -226,71 +220,32 @@ void set_input(Vtop *top, const vecIn_t& input)	{
 	top->spr_dat_i = 0;
 
 	int cnt = 0;
-    top->icbiu_ack_i = input[cnt++];
-    top->icbiu_err_i = input[cnt++];
-    top->ic_en 		 = input[cnt++];
-    top->icqmem_cycstb_i = input[cnt++];
+    top->icbiu_ack_i = input[cnt++]	- '0';
+    top->icbiu_err_i = input[cnt++] - '0';
+    top->ic_en 		 = input[cnt++] - '0';
+    top->icqmem_cycstb_i = input[cnt++] - '0';
     //top->ic_en = 0;	cnt++;
     //top->icqmem_cycstb_i = 0; cnt ++;
-    top->icqmem_ci_i = input[cnt++];
+    top->icqmem_ci_i = input[cnt++] - '0';
 
     for (int i = 0; i < 4; i++) {
-        top->icqmem_sel_i = ((top->icqmem_sel_i << 1) | (input[cnt++] - 48));
+        top->icqmem_sel_i = ((top->icqmem_sel_i << 1) | (input[cnt++] - '0'));
     }
     for (int i = 0; i < 4; i++) {
-        top->icqmem_tag_i = ((top->icqmem_tag_i << 1) | (input[cnt++] - 48));
+        top->icqmem_tag_i = ((top->icqmem_tag_i << 1) | (input[cnt++] - '0'));
     }
-    top->spr_cs = input[cnt++];
-    top->spr_write = input[cnt++];
+    top->spr_cs = input[cnt++] - '0';
+    top->spr_write = input[cnt++] - '0';
     for (int i = 0; i < 32; i++) {
-        top->icbiu_dat_i = ((top->icbiu_dat_i << 1) | (input[cnt++] - 48));
-    }
-    for (int i = 0; i < 32; i++) {
-        top->icqmem_adr_i = ((top->icqmem_adr_i << 1) | (input[cnt++] - 48));
+        top->icbiu_dat_i = ((top->icbiu_dat_i << 1) | (input[cnt++] - '0'));
     }
     for (int i = 0; i < 32; i++) {
-        top->spr_dat_i = ((top->spr_dat_i << 1) | (input[cnt++] - 48));
+        top->icqmem_adr_i = ((top->icqmem_adr_i << 1) | (input[cnt++] - '0'));
+    }
+    for (int i = 0; i < 32; i++) {
+        top->spr_dat_i = ((top->spr_dat_i << 1) | (input[cnt++] - '0'));
     }
 
-//	cout 
-//	<< (bitset<1>) top->icbiu_ack_i
-//	<< (bitset<1>) top->icbiu_err_i
-//	<< (bitset<1>) top->ic_en 		
-//	<< (bitset<1>) top->icqmem_cycstb_i 
-//	<< (bitset<1>) top->icqmem_ci_i
-//	<< (bitset<4>) top->icqmem_sel_i
-//	<< (bitset<4>) top->icqmem_tag_i
-//	<< (bitset<1>) top->spr_cs
-//	<< (bitset<1>) top->spr_write 
-//	<< (bitset<32>) top->icbiu_dat_i
-//	<< (bitset<32>) top->icqmem_adr_i
-//	<< (bitset<32>) top->spr_dat_i
-//	<< endl;
-
-//    top->icbiu_ack_i = input[0];
-//    top->icbiu_err_i = input[1];
-//    top->ic_en 		 = input[2];
-//    top->icqmem_cycstb_i = input[3];
-//    top->icqmem_ci_i = input[4];
-
-//    for (int i = 0; i < 4; i++) {
-//        top->icqmem_sel_i = ((top->icqmem_sel_i << 1) | (input[5 + i] - 48));
-//    }
-//    for (int i = 0; i < 4; i++) {
-//        top->icqmem_tag_i = ((top->icqmem_tag_i << 1) | (input[9 + i] - 48));
-//    }
-//    top->spr_cs = input[13];
-//    top->spr_write = input[14];
-//    for (int i = 0; i < 32; i++) {
-//        top->icbiu_dat_i = ((top->icbiu_dat_i << 1) | (input[15 + i] - 48));
-//    }
-//    for (int i = 0; i < 32; i++) {
-//        top->icqmem_adr_i = ((top->icqmem_adr_i << 1) | (input[47 + i] - 48));
-//    }
-//    for (int i = 0; i < 32; i++) {
-//        top->spr_dat_i = ((top->spr_dat_i << 1) | (input[69 + i] - 48));
-//    }
-	
 	assert (cnt == CONST_NUM_INPUT_BITS);
 }
 
@@ -298,7 +253,7 @@ void RandomVecIn(vecIn_t& vecIn)
 {
 	vecIn = string(CONST_NUM_INPUT_BITS, '0');
     for (uint i = 0; i < vecIn.length(); i++) 
-		vecIn[i] = (rand() & 0x01) + 48;
+		vecIn[i] = (rand() & 0x01) + '0';
     assert(vecIn.length() == (uint)CONST_NUM_INPUT_BITS);
 }
 
@@ -472,14 +427,14 @@ void printCktState (Vtop* top) {
 		<< endl;	
 }
 
-void modifyVecIn(vecIn_t& vecIn, const rstIn_t& resetInput) {
-	assert(resetInput.length() == (uint) CONST_NUM_INPUT_BITS);
-	assert(vecIn.length() == (uint) CONST_NUM_INPUT_BITS);
-
-	for (uint it = 0; it < vecIn.length(); ++it) {	
-		if(resetInput[it] == '1')
-			vecIn[it] = '0';
-		else if(resetInput[it] == '0')
-			vecIn[it] = '1';
-	}
-}
+//void modifyVecIn(vecIn_t& vecIn, const rstIn_t& resetInput) {
+//	assert(resetInput.length() == (uint) CONST_NUM_INPUT_BITS);
+//	assert(vecIn.length() == (uint) CONST_NUM_INPUT_BITS);
+//
+//	for (uint it = 0; it < vecIn.length(); ++it) {	
+//		if(resetInput[it] == '1')
+//			vecIn[it] = '0';
+//		else if(resetInput[it] == '0')
+//			vecIn[it] = '1';
+//	}
+//}

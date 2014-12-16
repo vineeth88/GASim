@@ -15,9 +15,9 @@
 const int CONST_NUM_INPUT = 12;
 const int CONST_NUM_INPUT_BITS = 111;
 const int CONST_NUM_BRANCH = 19;
-const int CONST_NUM_VARS = 10;		// TODO
+const int CONST_NUM_VARS = 4;		// TODO
 const int CONST_NUM_STATE_BITS = 75;
-const int CONST_NUM_CTRL_BITS = 75;	// TODO
+const int CONST_NUM_CTRL_BITS = 7;	// TODO
 
 void set_input(Vtop*, const vecIn_t&);
 void RandomVecIn(vecIn_t&);
