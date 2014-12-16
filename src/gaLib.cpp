@@ -220,6 +220,12 @@ void gaIndiv_t :: printIndiv(bool full_) {
 		cout << input_vec[i];
 		if ((i+1) % CONST_NUM_INPUT_BITS == 0)
 			cout << endl;
+		#if defined(__or1200_1)
+			if (i % CONST_NUM_INPUT_BITS == 5) {
+				i += CONST_NUM_INPUT_BITS - 6;
+				cout << endl;
+			}
+		#endif
 	}
 	
 	if (full_) {
@@ -233,7 +239,7 @@ void gaIndiv_t :: printIndiv(bool full_) {
 				cout << "--" << endl;
 		}
 		cout << endl;
-
+	}
 		for (vector<int>::iterator it = branch_cycle.begin();
 				it != branch_cycle.end(); ++it)
 			cout << *it << " ";
@@ -243,7 +249,7 @@ void gaIndiv_t :: printIndiv(bool full_) {
 			if (branch_cov[i])
 				cout << i << "(" << branch_cov[i] << ") ";
 		cout << endl;
-	}
+	//}
 	cout << endl;
 }
 

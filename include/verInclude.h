@@ -44,6 +44,7 @@
 #elif defined(__or1200_1)
 	#define benchCkt "or1200_1"
 	#define benchDir "bench/or1200_1/"
+	//#define benchDir "or1/"
 	#include "or1200_1Int.h"
 
 #elif defined(__or1200_2)

@@ -225,11 +225,11 @@ int main(int argc, char* argv[]) {
 	//exit(0);
 
 	/* *************** END : STAGE 1	*************** */
-#if !defined(__b12)
-	PrintVectorSet(paramObj1->inputVec, true);
-	delete paramObj1;
-	return 0;
-#endif
+//#if !defined(__b12)
+//	PrintVectorSet(paramObj1->inputVec, true);
+//	delete paramObj1;
+//	return 0;
+//#endif
 
 	/*	************* START : STAGE 2 	*************** */
 	covGraph_t covGraph;
@@ -345,6 +345,8 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
 		}
 
 		/* 	curr_val = Selected edge with endpoints start_val -> end_val */
+		if (edgeVec.size() == 0)
+			return;
 		int curr_val = edgeVec.back();
 		bEdge_t* curr_edge = branchGraph.getEdge(curr_val);
 		int start_val = curr_edge->startTop;
@@ -1464,7 +1466,7 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 
 			indiv->simCkt(cktVar);
 
-			//			indiv->printIndiv(1);
+			indiv->printIndiv(0);
 
 			/* Add states to stateMap	*/
 			for (state_pVec_iter st = indiv->state_list.begin(); 
@@ -1710,7 +1712,7 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 				gaIndiv_t* indiv = stage0Pop.indiv_vec[ind];
 				indiv->simCkt(cktVar);
 
-				//				indiv->printIndiv(1);
+				indiv->printIndiv(0);
 
 				/* Add states to stateMap	*/
 				for (state_pVec_iter st = indiv->state_list.begin(); 

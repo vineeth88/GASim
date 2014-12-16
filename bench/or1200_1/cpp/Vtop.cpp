@@ -68,15 +68,15 @@ void Vtop::__Vconfigure(Vtop__Syms* vlSymsp, bool first) {
     __vlCoverInsert(&(vlSymsp->__Vcoverage[1]), first, "or1200_dc_top.v", 273, 0, ".v", "v_line/or1200_dc_top", "else");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[2]), first, "or1200_dc_fsm.v", 201, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "if");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[3]), first, "or1200_dc_fsm.v", 213, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "if");
-    __vlCoverInsert(&(vlSymsp->__Vcoverage[4]), first, "or1200_dc_fsm.v", 229, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "else");
-    __vlCoverInsert(&(vlSymsp->__Vcoverage[5]), first, "or1200_dc_fsm.v", 221, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "elsif");
+    __vlCoverInsert(&(vlSymsp->__Vcoverage[4]), first, "or1200_dc_fsm.v", 221, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "elsif");
+    __vlCoverInsert(&(vlSymsp->__Vcoverage[5]), first, "or1200_dc_fsm.v", 229, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "else");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[6]), first, "or1200_dc_fsm.v", 212, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "case");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[7]), first, "or1200_dc_fsm.v", 236, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "if");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[8]), first, "or1200_dc_fsm.v", 238, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "if");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[9]), first, "or1200_dc_fsm.v", 240, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "if");
-    __vlCoverInsert(&(vlSymsp->__Vcoverage[10]), first, "or1200_dc_fsm.v", 262, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "else");
+    __vlCoverInsert(&(vlSymsp->__Vcoverage[10]), first, "or1200_dc_fsm.v", 248, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "elsif");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[11]), first, "or1200_dc_fsm.v", 255, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "elsif");
-    __vlCoverInsert(&(vlSymsp->__Vcoverage[12]), first, "or1200_dc_fsm.v", 248, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "elsif");
+    __vlCoverInsert(&(vlSymsp->__Vcoverage[12]), first, "or1200_dc_fsm.v", 262, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "else");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[13]), first, "or1200_dc_fsm.v", 235, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "case");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[14]), first, "or1200_dc_fsm.v", 265, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "if");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[15]), first, "or1200_dc_fsm.v", 269, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "elsif");
@@ -84,8 +84,8 @@ void Vtop::__Vconfigure(Vtop__Syms* vlSymsp, bool first) {
     __vlCoverInsert(&(vlSymsp->__Vcoverage[17]), first, "or1200_dc_fsm.v", 275, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "if");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[18]), first, "or1200_dc_fsm.v", 277, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "if");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[19]), first, "or1200_dc_fsm.v", 279, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "if");
-    __vlCoverInsert(&(vlSymsp->__Vcoverage[20]), first, "or1200_dc_fsm.v", 304, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "else");
-    __vlCoverInsert(&(vlSymsp->__Vcoverage[21]), first, "or1200_dc_fsm.v", 297, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "elsif");
+    __vlCoverInsert(&(vlSymsp->__Vcoverage[20]), first, "or1200_dc_fsm.v", 297, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "elsif");
+    __vlCoverInsert(&(vlSymsp->__Vcoverage[21]), first, "or1200_dc_fsm.v", 304, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "else");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[22]), first, "or1200_dc_fsm.v", 274, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "case");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[23]), first, "or1200_dc_fsm.v", 318, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "case");
     __vlCoverInsert(&(vlSymsp->__Vcoverage[24]), first, "or1200_dc_fsm.v", 211, 0, ".v.or1200_dc_fsm", "v_line/or1200_dc_fsm", "else");
@@ -219,14 +219,14 @@ void Vtop::_sequent__TOP__3(Vtop__Syms* __restrict vlSymsp) {
 			vlTOPp->v__DOT__or1200_dc_fsm__DOT__store = 0;
 			__Vdly__v__DOT__or1200_dc_fsm__DOT__cache_inhibit = 0;
 		    } else {
-			++(vlSymsp->__Vcoverage[21]);
 			if (vlTOPp->dcsb_ack_i) {
+			    ++(vlSymsp->__Vcoverage[20]);
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__state = 0;
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__hitmiss_eval = 0;
 			    vlTOPp->v__DOT__or1200_dc_fsm__DOT__store = 0;
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__cache_inhibit = 0;
 			} else {
-			    ++(vlSymsp->__Vcoverage[20]);
+			    ++(vlSymsp->__Vcoverage[21]);
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__hitmiss_eval = 0;
 			}
 		    }
@@ -245,8 +245,8 @@ void Vtop::_sequent__TOP__3(Vtop__Syms* __restrict vlSymsp) {
 					 << 2)));
 			++(vlSymsp->__Vcoverage[14]);
 		    } else {
-			++(vlSymsp->__Vcoverage[15]);
 			if (vlTOPp->dcsb_ack_i) {
+			    ++(vlSymsp->__Vcoverage[15]);
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__state = 0;
 			    vlTOPp->v__DOT__or1200_dc_fsm__DOT__load = 0;
 			}
@@ -278,7 +278,6 @@ void Vtop::_sequent__TOP__3(Vtop__Syms* __restrict vlSymsp) {
 			__Vdly__v__DOT__or1200_dc_fsm__DOT__hitmiss_eval = 0;
 			vlTOPp->v__DOT__or1200_dc_fsm__DOT__load = 0;
 		    } else {
-			++(vlSymsp->__Vcoverage[12]);
 			if (((IData)(vlTOPp->v__DOT__tagcomp_miss) 
 			     & (IData)(vlTOPp->dcsb_ack_i))) {
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__saved_addr_r 
@@ -287,20 +286,21 @@ void Vtop::_sequent__TOP__3(Vtop__Syms* __restrict vlSymsp) {
 					      + (vlTOPp->v__DOT__or1200_dc_fsm__DOT__saved_addr_r 
 						 >> 2)) 
 					     << 2)));
+			    ++(vlSymsp->__Vcoverage[10]);
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__cache_inhibit = 0;
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__state = 2;
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__hitmiss_eval = 0;
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__cnt = 2;
 			} else {
-			    ++(vlSymsp->__Vcoverage[11]);
 			    if ((1 & ((~ (IData)(vlTOPp->v__DOT__tagcomp_miss)) 
 				      & (~ (IData)(vlTOPp->dcqmem_ci_i))))) {
+				++(vlSymsp->__Vcoverage[11]);
 				__Vdly__v__DOT__or1200_dc_fsm__DOT__cache_inhibit = 0;
 				__Vdly__v__DOT__or1200_dc_fsm__DOT__state = 0;
 				__Vdly__v__DOT__or1200_dc_fsm__DOT__hitmiss_eval = 0;
 				vlTOPp->v__DOT__or1200_dc_fsm__DOT__load = 0;
 			    } else {
-				++(vlSymsp->__Vcoverage[10]);
+				++(vlSymsp->__Vcoverage[12]);
 				__Vdly__v__DOT__or1200_dc_fsm__DOT__hitmiss_eval = 0;
 			    }
 			}
@@ -318,9 +318,9 @@ void Vtop::_sequent__TOP__3(Vtop__Syms* __restrict vlSymsp) {
 			vlTOPp->v__DOT__or1200_dc_fsm__DOT__store = 1;
 			vlTOPp->v__DOT__or1200_dc_fsm__DOT__load = 0;
 		    } else {
-			++(vlSymsp->__Vcoverage[5]);
 			if (((IData)(vlTOPp->dc_en) 
 			     & (IData)(vlTOPp->dcqmem_cycstb_i))) {
+			    ++(vlSymsp->__Vcoverage[4]);
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__saved_addr_r 
 				= vlTOPp->dcqmem_adr_i;
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__cache_inhibit = 0;
@@ -329,7 +329,7 @@ void Vtop::_sequent__TOP__3(Vtop__Syms* __restrict vlSymsp) {
 			    vlTOPp->v__DOT__or1200_dc_fsm__DOT__store = 0;
 			    vlTOPp->v__DOT__or1200_dc_fsm__DOT__load = 1;
 			} else {
-			    ++(vlSymsp->__Vcoverage[4]);
+			    ++(vlSymsp->__Vcoverage[5]);
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__cache_inhibit = 0;
 			    __Vdly__v__DOT__or1200_dc_fsm__DOT__hitmiss_eval = 0;
 			    vlTOPp->v__DOT__or1200_dc_fsm__DOT__store = 0;
