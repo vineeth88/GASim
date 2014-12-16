@@ -5,16 +5,9 @@ using namespace std;
 keyVal_t state_t :: getHash() {
 	// TODO
 	keyVal_t hash_value = 
-		state_val.substr(0,32) +  // addr
-		state_val.substr(32,1) +  // read
-		state_val.substr(33,1) +  // miss
-		state_val.substr(34,1) +  // miss_ack
-		state_val.substr(35,32) +  // saved_addr
 		state_val.substr(67,3) +  // state
 		state_val.substr(70,3) +  // cnt
 		state_val.substr(73,1) +  // hitmiss_eval
-		state_val.substr(74,1) +  // store
-		state_val.substr(75,1) +  // load
 		state_val.substr(76,1);  // inhibit
 	return hash_value;
 }
@@ -146,16 +139,9 @@ void state_t::printState (bool full_) {
     	cout << state_val << endl;
 	else {
 		cout
-		<< " " << state_val.substr(0,32) 	// addr
-		<< " " << state_val.substr(32,1) 	// read
-		<< " " << state_val.substr(33,1) 	// miss
-		<< " " << state_val.substr(34,1) 	// miss_ack
-		<< " " << state_val.substr(35,32)	// saved_addr
 		<< " " << state_val.substr(67,3) 	// state
 		<< " " << state_val.substr(70,3) 	// cnt
 		<< " " << state_val.substr(73,1) 	// hitmiss_eval
-		<< " " << state_val.substr(74,1) 	// store
-		<< " " << state_val.substr(75,1) 	// load
 		<< " " << state_val.substr(76,1)	// inhibit
 		<< endl;
 	}
@@ -236,12 +222,12 @@ void set_input(Vtop *top, const vecIn_t& input)	{
 	top->spr_dat_i = 0;
 
 	int cnt = 0;
-    top->dcsb_ack_i = input[cnt++];
-    top->dcsb_err_i = input[cnt++];
-    top->dc_en 		 = input[cnt++];
-    top->dcqmem_cycstb_i = input[cnt++];
-    top->dcqmem_ci_i = input[cnt++];
-    top->dcqmem_we_i =  input[cnt++];
+    top->dcsb_ack_i = input[cnt++] - '0';
+    top->dcsb_err_i = input[cnt++] - '0';
+    top->dc_en 		 = input[cnt++] - '0';
+    top->dcqmem_cycstb_i = input[cnt++] - '0';
+    top->dcqmem_ci_i = input[cnt++] - '0';
+    top->dcqmem_we_i =  input[cnt++] - '0';
 
     for (int i = 0; i < 4; i++) {
         top->dcqmem_sel_i = ((top->dcqmem_sel_i << 1) | (input[cnt++] - 48));
@@ -249,8 +235,8 @@ void set_input(Vtop *top, const vecIn_t& input)	{
     for (int i = 0; i < 4; i++) {
         top->dcqmem_tag_i = ((top->dcqmem_tag_i << 1) | (input[cnt++] - 48));
     }
-    top->spr_cs = input[cnt++];
-    top->spr_write = input[cnt++];
+    top->spr_cs = input[cnt++] - '0';
+    top->spr_write = input[cnt++] - '0';
     for (int i = 0; i < 32; i++) {
         top->dcsb_dat_i = ((top->dcsb_dat_i << 1) | (input[cnt++] - 48));
     }
@@ -285,8 +271,12 @@ void set_input(Vtop *top, const vecIn_t& input)	{
 void RandomVecIn(vecIn_t& vecIn)
 {
 	vecIn = string(CONST_NUM_INPUT_BITS, '0');
+//	// Only inputs which are control-flow variables
+//    for (uint i = 0; i < 6; i++) 
+//		vecIn[i] = (rand() & 0x01) + 48;
     for (uint i = 0; i < vecIn.length(); i++) 
 		vecIn[i] = (rand() & 0x01) + 48;
+	
     assert(vecIn.length() == (uint)CONST_NUM_INPUT_BITS);
 }
 

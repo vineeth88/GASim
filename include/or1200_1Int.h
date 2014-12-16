@@ -17,7 +17,7 @@ const int CONST_NUM_INPUT_BITS = 144;
 const int CONST_NUM_BRANCH = 25;
 const int CONST_NUM_VARS = 11;		// TODO
 const int CONST_NUM_STATE_BITS = 77;
-const int CONST_NUM_CTRL_BITS = 77;	// TODO
+const int CONST_NUM_CTRL_BITS = 8;	// TODO
 
 void set_input(Vtop*, const vecIn_t&);
 void RandomVecIn(vecIn_t&);
@@ -45,7 +45,10 @@ void printCktState(Vtop*);
 inline
 bool IsDefaultBranch(const int i)
 {
-    return (i == 23); // reset branch
+    return ((i == 23) ||
+			(i == 11) ||
+			(i == 1)  ||
+			(i == 0)); // reset branch
 }
 
 // Circuit Simulation Functions
