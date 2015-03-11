@@ -46,8 +46,8 @@ module b12(
    parameter YELLOW = 2;
    parameter BLUE = 3;
 
-   parameter LED_ON = 1;
-   parameter LED_OFF = 0;
+   parameter LED_ON = 1'b1;
+   parameter LED_OFF = 1'b0;
 
    parameter PLAY_ON = 1;
    parameter PLAY_OFF = 0;
@@ -234,8 +234,8 @@ module b12(
 	      end
 	    else    
 	      begin
-		     // count <= (count + 1) % (2**COD_COLOR) ;
-		     // num <= count;
+		     // count = (count + 1) % (2**COD_COLOR) ;
+		     // num = count;
 		     count = (count + 1) % (2**COD_COLOR) ;
 		     num <= count;
 	      end
@@ -249,15 +249,15 @@ module b12(
 	      begin
              integer mar;
 		     data_out <= 0;
-		     for (mar = 0; mar <= SIZE_MEM - 1; mar = mar + 1)
+		     for(mar = 0; mar <= SIZE_MEM - 1; mar = mar + 1)
 		       memory[mar] = 0;
-//		       memory[mar] <= 0;
+//		       memory[mar] = 0;
 	      end
 	    else
 	      begin
 		     data_out <= memory[address];
 		     if (wr)
-//			   memory[address] <= data_in;
+//			   memory[address] = data_in;
 			   memory[address] = data_in;
 	      end
      end
@@ -279,17 +279,17 @@ module b12(
 	    if (reset)
 	      begin
 		     nloss <= LED_OFF;
-		     nl <=  LED_OFF;
-		     play <= PLAY_OFF;
-		     wr <= 0;
+		     nl <=  {4{LED_OFF}};
+		     play = PLAY_OFF;
+		     wr = 0;
 		     scan = 0;
 		     max = 0;
 		     ind = 0;
 		     timebase = 0;
 		     count2 = 0;
-		     sound <= 0;
-		     address <= 0;
-		     data_in <= 0;
+		     sound = 0;
+		     address = 0;
+		     data_in = 0;
 		     gamma = `G0;
 	      end
 	    else
@@ -309,9 +309,9 @@ module b12(
 			   `G1: // set to zero
 			     begin
 				    nloss <= LED_OFF;
-				    nl <= LED_OFF;
-				    play <= PLAY_OFF;
-				    wr <= 0;
+				    nl <= {4{LED_OFF}};
+				    play = PLAY_OFF;
+				    wr = 0;
 				    max = 0;
 				    timebase = COUNT_SEQ; // 33
 				    gamma = `G2;
@@ -320,16 +320,16 @@ module b12(
 			   `G2:
 			     begin
 				    scan = 0;
-				    wr <= 1; // begin to write something!!! the num
-				    address <= max; // address for data_in
-				    data_in <= num; // num to data_in
+				    wr = 1; // begin to write something!!! the num
+				    address = max; // address for data_in
+				    data_in = num; // num to data_in
 				    gamma = `G3;
 			     end
 			   
 			   `G3:
 			     begin
-				    wr <= 0; // close the write!!!
-				    address <= scan;
+				    wr = 0; // close the write!!!
+				    address = scan;
 				    gamma = `G4;
 			     end
 			   
@@ -342,9 +342,9 @@ module b12(
 			     begin
 				    nl[data_out] <= LED_ON;
 				    count2 = timebase;
-				    play <= PLAY_ON;
-				    sound <= {1'b0,data_out};
-//				    sound <= data_out;
+				    play = PLAY_ON;
+				    sound = {1'b0,data_out};
+//				    sound = data_out;
 				    gamma = `G6;
 			     end
 			   
@@ -352,8 +352,8 @@ module b12(
 			     begin
 				    if (count2 == 0)
 				      begin
-					     nl <= LED_OFF;
-					     play <= PLAY_OFF;
+					     nl <= {4{LED_OFF}};
+					     play = PLAY_OFF;
 					     count2 = timebase;
 					     gamma = `G7;
 				      end
@@ -389,7 +389,7 @@ module b12(
 			   `G8:
 			     begin
 				    count2 = COUNT_KEY;
-				    address <= scan;
+				    address = scan;
 				    gamma = `G9;
 			     end
 			   
@@ -412,8 +412,8 @@ module b12(
 					     if (k[0] == KEY_ON)
 					       begin
 						      ind = 0;
-						      sound <= 0;
-						      play <= PLAY_ON;
+						      sound = 0;
+						      play = PLAY_ON;
 						      count2 = timebase;
 						      
 						      if (data_out == 0)
@@ -427,8 +427,8 @@ module b12(
 					     else if (k[1] == KEY_ON)
 					       begin
 						      ind = 1;
-						      sound <= 1;
-						      play <= PLAY_ON;
+						      sound = 1;
+						      play = PLAY_ON;
 						      count2 = timebase;
 						      
 						      if (data_out == 1)
@@ -442,8 +442,8 @@ module b12(
 					     else if (k[2] == KEY_ON)
 					       begin
 						      ind = 2;
-						      sound <= 2;
-						      play <= PLAY_ON;
+						      sound = 2;
+						      play = PLAY_ON;
 						      count2 = timebase;
 						      
 						      if (data_out == 2)
@@ -457,8 +457,8 @@ module b12(
 					     else if (k[3] == KEY_ON)
 					       begin
 						      ind = 3;
-						      sound <= 3;
-						      play <= PLAY_ON;
+						      sound = 3;
+						      play = PLAY_ON;
 						      count2 = timebase;
 						      
 						      if (data_out == 3)
@@ -484,8 +484,8 @@ module b12(
 			     begin
 				    if (count2 == 0)
 				      begin
-					     nl <= LED_OFF;
-					     play <= PLAY_OFF;
+					     nl <= {4{LED_OFF}};
+					     play = PLAY_OFF;
 					     count2 = timebase;
 					     gamma = `G12;
 				      end
@@ -513,8 +513,8 @@ module b12(
 					       end
 					     else
 					       begin
-						      play <= PLAY_ON;
-						      sound <= `S_WIN;
+						      play = PLAY_ON;
+						      sound = `S_WIN;
 						      count2 = COUNT_FIN;
 						      gamma = `W0;
 					       end
@@ -536,8 +536,8 @@ module b12(
 			     begin
 				    if (count2 == 0)
 				      begin
-					     nl <= LED_OFF;
-					     play <= PLAY_OFF;
+					     nl <= {4{LED_OFF}};
+					     play = PLAY_OFF;
 					     count2 = timebase;
 					     gamma = `E1;
 				      end
@@ -564,7 +564,7 @@ module b12(
 			   
 			   `K0:
 			     begin
-				    address <= max;
+				    address = max;
 				    gamma = `K1;
 			     end
 			   
@@ -576,9 +576,9 @@ module b12(
 			   `K2:
 			     begin
 				    nl[data_out] <= LED_ON;
-				    play <= PLAY_ON;
-				    sound <= {1'b0,data_out};
-//				    sound <= data_out;
+				    play = PLAY_ON;
+				    sound = {1'b0,data_out};
+//				    sound = data_out;
 				    count2 = timebase;
 				    gamma = `K3;
 			     end
@@ -587,8 +587,8 @@ module b12(
 			     begin
 				    if (count2 == 0)
 				      begin
-					     nl <= LED_OFF;
-					     play <= PLAY_OFF;
+					     nl <= {4{LED_OFF}};
+					     play = PLAY_OFF;
 					     count2 = timebase;
 					     gamma = `K4;
 				      end
@@ -611,8 +611,8 @@ module b12(
 					     else
 					       begin
 						      nl[data_out] <= LED_ON;
-						      play <= PLAY_ON;
-						      sound <= `S_LOSS;
+						      play = PLAY_ON;
+						      sound = `S_LOSS;
 						      count2 = COUNT_FIN;
 						      gamma = `K5;
 					       end
@@ -628,8 +628,8 @@ module b12(
 			     begin
 				    if (count2==0)
 				      begin
-					     nl <= LED_OFF;
-					     play <= PLAY_OFF;
+					     nl <= {4{LED_OFF}};
+					     play = PLAY_OFF;
 					     count2 = COUNT_FIN;
 					     gamma = `K6;
 				      end
@@ -645,8 +645,8 @@ module b12(
 				    if (count2==0)
 				      begin
 					     nl[data_out] <= LED_ON;
-					     play <= PLAY_ON;
-					     sound <= `S_LOSS;
+					     play = PLAY_ON;
+					     sound = `S_LOSS;
 					     count2 = COUNT_FIN;
 					     gamma = `K5;
 				      end
@@ -661,8 +661,8 @@ module b12(
 			     begin
 				    if (count2==0)
 				      begin
-					     nl <= LED_ON;
-					     play <= PLAY_OFF;
+					     nl <= {4{LED_ON}};
+					     play = PLAY_OFF;
 					     count2 = COUNT_FIN;
 					     gamma = `W1;
 				      end
@@ -677,9 +677,9 @@ module b12(
 			     begin
 				    if (count2==0)
 				      begin
-					     nl <= LED_OFF;
-					     play <= PLAY_ON;
-					     sound <= `S_WIN;
+					     nl <= {4{LED_OFF}};
+					     play = PLAY_ON;
+					     sound = `S_WIN;
 					     count2 = COUNT_FIN;
 					     gamma = `W0;
 				      end
