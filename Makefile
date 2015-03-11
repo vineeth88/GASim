@@ -1,6 +1,6 @@
-BENCH = b01
+BENCH = b11
 DEFINE_BENCH = -D__${BENCH}
-BENCH_DIR = ./bench/${BENCH}/obj_dir
+BENCH_DIR = ./bench/${BENCH}/cpp
 LIBS =  ${BENCH_DIR}/Vtop__ALL.a
 
 CXX = g++

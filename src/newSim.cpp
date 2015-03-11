@@ -3,6 +3,8 @@
 #include "verilated.h"
 #include "gaLib.h"
 #include "graphLib.h"
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #define GA_FIND_TOP_INDIV
 
@@ -158,6 +160,20 @@ void printSet(set<int>&);
 void printCnt(int_vec&);
 void PrintVectorSet(const vecIn_t& inputVec, bool printFlag = false);
 
+double get_time()
+{
+   struct rusage ru;
+   struct timeval rtime; 
+
+   getrusage(RUSAGE_SELF, &ru);
+   rtime=ru.ru_utime;
+   double time = (double)rtime.tv_sec + (double)rtime.tv_usec / 1000000.0;
+   rtime = ru.ru_stime;
+   time += (double)rtime.tv_sec + (double)rtime.tv_usec / 1000000.0;
+
+   return time;
+}
+
 int main(int argc, char* argv[]) {
 
 #define random_seed
@@ -170,10 +186,8 @@ int main(int argc, char* argv[]) {
 #endif
 
 	char paramFile[100];
-#ifndef _STAGE1_OLD_FN_
 	cout << "New function" << endl;
 	sprintf(paramFile, "%s.param", benchCkt);
-#endif
 
 	if (argc >= 2) {
 		if (strcmp(argv[1], "-h") == 0) {
@@ -189,6 +203,8 @@ int main(int argc, char* argv[]) {
 			cout << "Using parameters from " << paramFile << endl;
 		}
 	}		
+
+	double start_time = get_time();
 
 	readExclBranchList();
 
@@ -232,6 +248,9 @@ int main(int argc, char* argv[]) {
 //#endif
 
 	/*	************* START : STAGE 2 	*************** */
+
+	double stage1_time = get_time();
+
 	covGraph_t covGraph;
 	brGraph_t branchGraph;
 	sprintf(covGraph.fName, "%s.graph", benchCkt);
@@ -240,6 +259,9 @@ int main(int argc, char* argv[]) {
 
 	if (!brFlag) {
 		PrintVectorSet(paramObj1->inputVec, true);
+
+		cout << "S0: " << stage1_time - start_time << endl;
+
 		delete paramObj1;
 		return 0;
 	}		
@@ -280,6 +302,11 @@ int main(int argc, char* argv[]) {
 		<< "gaIndiv_t: " << gaIndiv_t::mem_alloc_cnt << endl
 		<< "state_t: " << state_t::mem_alloc_cnt << endl;
 
+	double stage2_time = get_time();
+	
+	cout << "S1: " << stage1_time - start_time << endl
+		 << "S2: " << stage2_time - stage1_time << endl;
+
 	exit(0);
 	delete paramObj2;
 	return 0;
@@ -294,7 +321,7 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
 	//	set<int> &unCovered = paramObj2->unCovered;
 
 	brGraph_t& branchGraph = *paramObj2->branchGraph;
-	covGraph_t& covGraph = *paramObj2->covGraph;
+//	covGraph_t& covGraph = *paramObj2->covGraph;
 
 	int_vec unCovered;
 	for (int br = 0; br < CONST_NUM_BRANCH; ++br) {
@@ -349,7 +376,7 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
 			return;
 		int curr_val = edgeVec.back();
 		bEdge_t* curr_edge = branchGraph.getEdge(curr_val);
-		int start_val = curr_edge->startTop;
+//		int start_val = curr_edge->startTop;
 		int end_val = curr_edge->endTop;
 
 		bNode_t* curr_node = branchGraph.getNode(end_val);
@@ -358,7 +385,7 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
 		string target_path = "Unreachable";
 		int target_lvl = (2 << 20);
 		int target_node = -1;
-		int target_tries = paramObj2->MAX_TRIES;
+//		int target_tries = paramObj2->MAX_TRIES;
 
 		/*	- Find path from curr_node to all the start_nodes of the uncovered edges
 			- Find the uncovered edge with the shortest path
@@ -434,11 +461,11 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
 					}
 				}
 
-				if (self_loop_br.size()) {
-					cout << "Self-loop: ";
-					printVec(self_loop_br);
-					cout << endl;
-				}
+//				if (self_loop_br.size()) {
+//					cout << "Self-loop: ";
+//					printVec(self_loop_br);
+//					cout << endl;
+//				}
 
 				/* Run stage 2	*/
 				paramObj2->tar_edge = tar_edge;
@@ -486,7 +513,7 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
 
 			cout << endl << "END OF PATH" << endl;
 
-			for (int br = 0; br < unCovered.size(); ++br) {
+			for (int br = 0; (uint)br < unCovered.size(); ++br) {
 				if (unCovered[br] == target_node)
 					unCovered[br] = -100;
 				else if (branchHit[unCovered[br]])
@@ -549,11 +576,11 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
 			vector<vecIn_t> nxtVec;
 			vector<int> nxtPaths;
 			for (stateMap_iter st = nxtStateMap.begin(); st != nxtStateMap.end(); ++st) {
-				cout << "State: ";
-				st->second->printState();
-				cout << "Hits : " << st->second->hit_count << endl;
-				cout << "Vector: " << vecMap[st->first] << endl;
-				cout << endl;
+//				cout << "State: ";
+//				st->second->printState();
+//				cout << "Hits : " << st->second->hit_count << endl;
+//				cout << "Vector: " << vecMap[st->first] << endl;
+//				cout << endl;
 
 				int_vec edgeVec;
 				edgeVec.clear();
@@ -569,7 +596,7 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
 
 				int curr_val = edgeVec.back();
 				bEdge_t* curr_edge = branchGraph.getEdge(curr_val);
-				int start_val = curr_edge->startTop;
+//				int start_val = curr_edge->startTop;
 				int end_val = curr_edge->endTop;
 
 				bNode_t* curr_node = branchGraph.getNode(end_val);
@@ -577,7 +604,7 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
 
 				string target_path = "Unreachable";
 				int target_lvl = (2 << 20);
-				int target_node = -1;
+//				int target_node = -1;
 
 				/*	- Find path from curr_node to all the start_nodes of the uncovered edges
 					- Find the uncovered edge with the shortest path
@@ -629,7 +656,7 @@ void Stage2_GenerateVectors(Stage2_Param* paramObj2) {
 				/* Might need to backtrack or just exit in this case */
 			}
 
-			for (int np = 0; np < nxtPaths.size(); ++np) {
+			for (uint np = 0; np < nxtPaths.size(); ++np) {
 				if (nxtPaths[np] > max_num_paths) {
 					max_num_paths = nxtPaths[np];
 					max_path_index = np;
@@ -737,7 +764,7 @@ void Stage2_Core(Stage2_Param* paramObj, int start_node) {
 
 			/* Reset masking for b12 */
 			#if defined(__b12)
-			for (int x = 0; x < indiv->input_vec.length(); x += 5) 
+			for (uint x = 0; x < indiv->input_vec.length(); x += 5) 
 				indiv->input_vec[x] = '0';
 			#endif
 
@@ -828,7 +855,7 @@ void Stage2_Core(Stage2_Param* paramObj, int start_node) {
 				state_fit_vec.push_back(state_fit);
 				prev_fit = state_fit;
 
-				if ((exit_state_loop) || (path_idx == path.length())){
+				if ((exit_state_loop) || ((uint)path_idx == path.length())){
 //					cout << "Indiv " << ind << " digressed @ index " 
 //						 << path_idx << "after" << state_fit_vec.size()
 //						 << endl;
@@ -1451,7 +1478,6 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 		bool new_state = false;
 
 		int maxCov = 0, avgCov = 0;
-		int_vec maxInd;
 
 		for (int ind = 0; ind < POP_SIZE; ++ind) {
 
@@ -1464,9 +1490,13 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 			//				indiv->input_vec[x] = '0';
 			//			#endif
 
+#if defined(__b12)
+			for (int x = 0; x < indiv->input_vec.length(); x += 5) 
+				indiv->input_vec[x] = '0';
+#endif
 			indiv->simCkt(cktVar);
 
-			indiv->printIndiv(0);
+//			indiv->printIndiv(0);
 
 			/* Add states to stateMap	*/
 			for (state_pVec_iter st = indiv->state_list.begin(); 
@@ -1508,18 +1538,6 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 
 		avgCov = (fitness_t)((double)avgCov / (double)POP_SIZE + 0.5);
 		improv_cov = (maxCov >= prevMaxCov);
-
-		/* Fittest Individuals i.e. individuals with maximum coverage	*/
-		for (int ind = 0; ind < POP_SIZE; ++ind) {
-
-			gaIndiv_t *indiv = stage0Pop.indiv_vec[ind];
-			if (indiv->num_branch == maxCov) {
-				cout << ind << " ";
-				maxInd.push_back(ind);
-			}
-
-		}
-		cout << endl;	
 
 		/* Compute Fitness	*/
 		for (int ind = 0; ind < POP_SIZE; ++ind) {
@@ -1704,7 +1722,6 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 			bool new_state = false;
 
 			int maxCov = 0, avgCov = 0;
-			int_vec maxInd;
 
 			for (int ind = 0; ind < POP_SIZE; ++ind) {
 
@@ -1712,7 +1729,7 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 				gaIndiv_t* indiv = stage0Pop.indiv_vec[ind];
 				indiv->simCkt(cktVar);
 
-				indiv->printIndiv(0);
+//				indiv->printIndiv(0);
 
 				/* Add states to stateMap	*/
 				for (state_pVec_iter st = indiv->state_list.begin(); 
@@ -1921,10 +1938,11 @@ void Stage1_GenerateVectors(Stage1_Param* paramObj) {
 
 	delete rstState;
 	delete cktVar;
+
 }
 
 int AddVector2Branch(int branch_index, vecIn_t inp) {
-	assert(inp.length() == CONST_NUM_INPUT_BITS);
+	assert(inp.length() == (uint)CONST_NUM_INPUT_BITS);
 	if (BranchInputVec[branch_index].compare("") == 0) {
 		BranchInputVec[branch_index] = inp;
 		return 0;

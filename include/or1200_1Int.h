@@ -45,10 +45,12 @@ void printCktState(Vtop*);
 inline
 bool IsDefaultBranch(const int i)
 {
-    return ((i == 23) ||
-			(i == 11) ||
-			(i == 1)  ||
-			(i == 0)); // reset branch
+    return (
+//			(i == 23) ||
+//			(i == 11) ||
+			(i == 1)  //||
+//			(i == 0)
+			); // reset branch
 }
 
 // Circuit Simulation Functions

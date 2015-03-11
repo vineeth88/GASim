@@ -109,7 +109,8 @@ int readGraph(covGraph_t& graphCov) {
 	graphFile.open(fileName, ifstream::in);
 	if (!graphFile) {
 		cout << "Unable to open file " << fileName << endl;
-		exit(-1);
+		//exit(-1);
+		return (1 << 15);
 	}
 
 	cout << "Reading file: " << fileName << endl;
